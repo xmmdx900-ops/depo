@@ -1,0 +1,1865 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>نظام إدارة مخزن المواد الأولية</title>
+  
+  <!-- مكتبات التصدير والتنسيق لملفات Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script>window.supabase || document.write('<script src="https://fastly.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"><\/script>');</script>
+  <script>window.supabase || document.write('<script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"><\/script>');</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+  <style>
+    #app-root.role-emp [data-del-tx], #app-root.role-emp [data-del-mat], #app-root.role-emp .wh-tab[data-view="settings"], #app-root.role-emp .wh-tab[data-view="audit"], #app-root.role-view .wh-actions, #app-root.role-view .wh-backup-row, #app-root.role-emp #btnImportBackup { display:none !important; }
+    #app-root .rp-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+    #app-root .rp-tab{flex:1;min-width:110px;padding:11px;border:1px solid var(--line);background:var(--bg);border-radius:10px;font-family:inherit;font-weight:700;cursor:pointer;color:var(--ink-soft)}
+    #app-root .rp-tab.on{background:var(--steel);color:#fff;border-color:var(--steel)}
+    #app-root .rp-card{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:16px}
+    #app-root .rp-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:10px}
+    #app-root .rp-filters label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--ink-soft);font-weight:700}
+    #app-root .rp-filters input,#app-root .rp-filters select{padding:9px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:14px;background:#fff}
+    #app-root .rp-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+    #app-root .rp-chips button,#app-root .rp-csv{padding:6px 12px;border:1px solid var(--line);background:#fff;border-radius:999px;cursor:pointer;font-family:inherit;font-size:12.5px}
+    #app-root .rp-sum{display:flex;gap:10px;margin:6px 0 14px;flex-wrap:wrap}
+    #app-root .rp-sum div{flex:1;min-width:110px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center;font-size:12.5px;color:var(--ink-soft)}
+    #app-root .rp-sum b{display:block;font-size:22px}
+    #app-root .rp-tbl{width:100%;border-collapse:collapse;font-size:13px;background:#fff}
+    #app-root .rp-tbl th{background:var(--steel);color:#fff;padding:9px;text-align:start}
+    #app-root .rp-tbl td{padding:8px 9px;border-bottom:1px solid var(--line)}
+    #app-root .rp-empty{color:var(--ink-soft);text-align:center;padding:18px}
+    #whGate{position:absolute;inset:0;background:rgba(243,239,228,.96);z-index:50;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-weight:700;color:#33454C;font-size:16px;line-height:1.9}
+    #whRole{font-size:12px;margin-top:6px;color:#E0992F;font-weight:700}
+
+    #app-root.wh-app {
+      --bg: #F3EFE4;
+      --panel: #FFFDF8;
+      --ink: #24211D;
+      --ink-soft: #5B564C;
+      --line: #DDD3BC;
+      --amber: #E0992F;
+      --amber-dark: #B9761C;
+      --steel: #33454C;
+      --steel-dark: #223037;
+      --in: #4C7A51;
+      --in-bg: #E6EFE2;
+      --out: #C1701F;
+      --out-bg: #F7E9D6;
+      --dmg: #B0453B;
+      --dmg-bg: #F6E1DE;
+
+      font-family: 'Tajawal', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 1px 0 var(--line);
+      position: relative;
+      min-height: 100%;
+    }
+    #app-root * { box-sizing: border-box; }
+    #app-root .en { unicode-bidi: isolate; }
+
+    #app-root .wh-header {
+      background: linear-gradient(160deg, var(--steel), var(--steel-dark));
+      color: #F3EFE4;
+      padding: 22px 26px 20px;
+      position: relative;
+    }
+    #app-root .wh-header::after {
+      content: "";
+      position: absolute;
+      inset-inline: 0;
+      bottom: -8px;
+      height: 8px;
+      background: repeating-linear-gradient(-45deg, var(--amber) 0 14px, var(--steel-dark) 14px 28px);
+    }
+    #app-root .wh-title-row { display:flex; align-items:center; gap:14px; }
+    #app-root .wh-logo {
+      width: 46px; height: 46px; flex: none;
+      border: 2px solid var(--amber);
+      border-radius: 8px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    #app-root .wh-title { font-weight: 600; font-size: 22px; letter-spacing: 0.5px; margin: 0; }
+    #app-root .wh-sub { font-size: 12.5px; color: #C9CFCF; margin: 3px 0 0; letter-spacing: 0.3px; }
+
+    #app-root .wh-actions { display:flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+    #app-root .wh-action-btn {
+      flex: 1; min-width: 150px;
+      border: none; cursor: pointer;
+      padding: 13px 12px;
+      border-radius: 10px;
+      font-family: 'Tajawal', sans-serif;
+      font-weight: 700; font-size: 14.5px;
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      transition: transform .12s ease, filter .12s ease;
+    }
+    #app-root .wh-action-btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
+    #app-root .wh-action-btn:active { transform: translateY(0); }
+    #app-root .wh-btn-in { background: var(--in); color: #fff; }
+    #app-root .wh-btn-out { background: var(--amber); color: #2c1c04; }
+
+    #app-root .wh-tabs {
+      display:flex; gap: 4px; padding: 14px 26px 0; background: var(--panel); border-bottom: 1px solid var(--line);
+      overflow-x: auto;
+    }
+    #app-root .wh-tab {
+      border: none; background: transparent; cursor: pointer;
+      padding: 10px 16px; font-family:'Tajawal',sans-serif; font-weight:700; font-size: 13.5px;
+      color: var(--ink-soft); border-bottom: 3px solid transparent; margin-bottom: -1px; white-space: nowrap;
+    }
+    #app-root .wh-tab.active { color: var(--steel-dark); border-bottom-color: var(--amber); }
+
+    #app-root .wh-body { padding: 22px 26px 30px; background: var(--panel); min-height: 340px; }
+    #app-root .wh-view { display: none; animation: whFade .18s ease; }
+    #app-root .wh-view.active { display: block; }
+    @keyframes whFade { from { opacity:0; transform: translateY(3px);} to {opacity:1; transform:none;} }
+
+    #app-root .wh-stats { display:flex; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
+    #app-root .wh-stats .wh-stat {
+      flex: 1; min-width: 150px;
+      background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
+    }
+    #app-root .wh-stats .wh-stat .num { font-size: 26px; font-weight:600; color: var(--steel-dark); }
+    #app-root .wh-stats .wh-stat .lbl { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+    #app-root .wh-stats .wh-stat.warn .num { color: var(--dmg); }
+
+    #app-root .wh-stock-alert-panel, #app-root .wh-expiry-alert-panel {
+      border-radius: 10px; padding: 16px; margin-bottom: 20px; display: none; animation: whFade .2s ease;
+    }
+    #app-root .wh-stock-alert-panel { background: #FDF3F2; border: 1px solid var(--dmg); }
+    #app-root .wh-stock-alert-panel.show { display: block; }
+    #app-root .wh-alert-head { display: flex; align-items: center; gap: 8px; color: var(--dmg); font-weight: 700; font-size: 14.5px; margin-bottom: 10px; }
+    #app-root .wh-alert-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    #app-root .wh-alert-item {
+      background: var(--panel); border: 1px solid var(--line); padding: 6px 12px; border-radius: 6px; font-size: 13px;
+      display: flex; align-items: center; gap: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    #app-root .wh-alert-item strong { color: var(--dmg); }
+
+    #app-root .wh-expiry-alert-panel { background: #FFF9E6; border: 1px solid var(--amber); }
+    #app-root .wh-expiry-alert-panel.show { display: block; }
+    #app-root .wh-expiry-head { display: flex; align-items: center; gap: 8px; color: var(--amber-dark); font-weight: 700; font-size: 14.5px; margin-bottom: 10px; }
+    #app-root .wh-expiry-item {
+      background: var(--panel); border: 1px solid var(--line); padding: 6px 12px; border-radius: 6px; font-size: 13px;
+      display: flex; align-items: center; gap: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    #app-root .wh-expiry-item strong { color: var(--amber-dark); }
+
+    #app-root .wh-toolbar { display:flex; gap:10px; margin-bottom: 14px; flex-wrap: wrap; align-items:center; }
+    #app-root .wh-input, #app-root .wh-select {
+      font-family:'Tajawal',sans-serif; font-size: 13.5px; padding: 9px 12px;
+      border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink);
+    }
+    #app-root .wh-input:focus, #app-root .wh-select:focus { outline: 2px solid var(--amber); outline-offset: 1px; }
+    #app-root .wh-search { flex: 1; min-width: 180px; }
+
+    table.wh-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    table.wh-table thead th {
+      text-align: start; font-family:'Tajawal',sans-serif; font-weight: 700; font-size: 12px;
+      color: var(--ink-soft); border-bottom: 2px solid var(--steel-dark); padding: 8px 10px; white-space: nowrap;
+    }
+    table.wh-table tbody td { padding: 10px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+    table.wh-table tbody tr:hover { background: #FAF6EC; }
+    .wh-empty { text-align:center; padding: 40px 10px; color: var(--ink-soft); font-size: 13.5px; }
+
+    #app-root .badge { display:inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700; }
+    #app-root .badge-in { background: var(--in-bg); color: var(--in); }
+    #app-root .badge-out { background: var(--out-bg); color: var(--out); }
+    #app-root .badge-ok { background: var(--in-bg); color: var(--in); }
+    #app-root .badge-low { background: var(--dmg-bg); color: var(--dmg); }
+
+    #app-root .wh-batch-details { display: block; font-size: 11px; color: var(--ink-soft); margin-top: 4px; font-weight: normal; }
+
+    #app-root .wh-icon-btn {
+      border: none; background: transparent; cursor: pointer; color: var(--ink-soft); font-size: 15px; padding: 4px 6px; border-radius: 6px;
+    }
+    #app-root .wh-icon-btn:hover { background: var(--bg); color: var(--dmg); }
+
+    #app-root .wh-section-title { font-size: 16px; font-weight:600; color: var(--steel-dark); margin: 0 0 12px; }
+
+    #app-root .wh-mat-form {
+      display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 10px 12px;
+      background: var(--bg); border: 1px dashed var(--line); border-radius: 10px; padding: 16px; margin-bottom: 20px;
+    }
+    #app-root .wh-field label { display:block; font-size: 11.5px; color: var(--ink-soft); margin-bottom: 4px; font-weight: 700; }
+    #app-root .wh-field input, #app-root .wh-field select { width: 100%; }
+    #app-root .wh-mat-form .wh-field.full { grid-column: 1 / -1; }
+    #app-root .wh-form-actions { grid-column: 1/-1; display:flex; gap:8px; margin-top:4px; }
+    #app-root .wh-btn-primary {
+      background: var(--steel-dark); color:#fff; border:none; padding: 9px 18px; border-radius: 8px;
+      font-family:'Tajawal',sans-serif; font-weight:700; font-size: 13px; cursor:pointer;
+    }
+    #app-root .wh-btn-primary:hover { filter: brightness(1.15); }
+    #app-root .wh-btn-ghost {
+      background: transparent; color: var(--ink-soft); border: 1px solid var(--line); padding: 9px 16px; border-radius: 8px;
+      font-family:'Tajawal',sans-serif; font-weight:700; font-size: 13px; cursor:pointer;
+    }
+
+    #app-root .wh-lang {
+      margin-inline-start: auto; align-self: flex-start;
+      background: rgba(243,239,228,.12); color: #F3EFE4; border: 1px solid rgba(243,239,228,.4);
+      border-radius: 8px; padding: 6px 10px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+    #app-root .wh-lang option { color: #24211D; background: #fff; }
+
+    /* Modal / Slip */
+    #app-root .wh-overlay {
+      position: fixed; inset: 0; background: rgba(34,48,55,.55); display:none; align-items:center; justify-content:center; z-index: 50; padding: 16px;
+      overflow-y: auto;
+    }
+    #app-root .wh-overlay.open { display:flex; }
+    #app-root .wh-slip {
+      background: var(--panel); width: 100%; max-width: 650px; border-radius: 6px;
+      position: relative; box-shadow: 0 18px 40px rgba(0,0,0,.28);
+      border-top: 8px solid var(--steel-dark); margin: auto;
+    }
+    #app-root .wh-slip-head { padding: 18px 22px 12px; display:flex; align-items:center; justify-content: space-between; }
+    #app-root .wh-slip-head h3 { margin:0; font-size: 18px; font-weight:600; }
+    #app-root .wh-stamp {
+      border: 2.5px solid currentColor; border-radius: 8px; padding: 3px 10px; font-weight: 800;
+      font-size: 11px; letter-spacing: 1px; transform: rotate(-6deg);
+    }
+    #app-root .wh-slip-body { padding: 6px 22px 22px; border-top: 1px dashed var(--line); }
+    #app-root .wh-slip-body .wh-field { margin-bottom: 13px; }
+    #app-root .wh-slip-body input, #app-root .wh-slip-body select {
+      width: 100%; padding: 10px 12px; border-radius: 7px; border: 1px solid var(--line); font-size: 14px; font-family:'Tajawal',sans-serif;
+    }
+    #app-root .wh-close-x { border:none; background:transparent; font-size: 18px; cursor:pointer; color: var(--ink-soft); line-height: 1; }
+
+    /* Multi-items table inside slip */
+    .slip-items-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+    .slip-items-table th { background: var(--bg); font-size: 12px; padding: 6px; border: 1px solid var(--line); text-align: start; }
+    .slip-items-table td { padding: 6px; border: 1px solid var(--line); background: #fff; }
+
+    #app-root .wh-toast {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--steel-dark); color:#fff; padding: 11px 20px; border-radius: 8px; font-size: 13.5px;
+      opacity: 0; transition: all .25s ease; z-index: 80; font-family:'Tajawal',sans-serif; box-shadow: 0 6px 18px rgba(0,0,0,.25);
+    }
+    #app-root .wh-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #app-root .wh-toast.err { background: var(--dmg); }
+
+    #app-root .wh-backup-row {
+      display:flex; align-items:center; gap: 14px; flex-wrap: wrap;
+      margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(243,239,228,.18);
+    }
+    #app-root .wh-backup-btn {
+      background: transparent; border: 1px solid rgba(243,239,228,.4); color: #EDEAE0;
+      font-family:'Tajawal',sans-serif; font-size: 12px; font-weight: 700; cursor:pointer;
+      padding: 6px 12px; border-radius: 7px; display:flex; align-items:center; gap:6px;
+    }
+    #app-root .wh-backup-btn:hover { background: rgba(243,239,228,.12); }
+    #app-root .wh-backup-note { font-size: 11px; color: #B8C0C1; }
+    #app-root .wh-file-input { display:none; }
+    
+    .wh-settings-box {
+      background: var(--bg); border: 1px dashed var(--line); border-radius: 10px; padding: 20px; margin-top: 15px;
+    }
+    .wh-settings-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="app-root" class="wh-app"><div id="whGate">جارٍ التحميل…</div>
+  <div class="wh-header">
+    <div class="wh-title-row">
+      <div class="wh-logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 8L12 4l9 4-9 4-9-4z" stroke="#E0992F" stroke-width="1.6" stroke-linejoin="round"/><path d="M3 8v9l9 4 9-4V8" stroke="#E0992F" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 12v9" stroke="#E0992F" stroke-width="1.6"/></svg>
+      </div>
+      <div>
+        <h1 class="wh-title" id="headerWarehouseName">نظام إدارة المخزون</h1>
+        <p id="whRole"></p><p class="wh-sub" id="headerCompanySub">مخزن المواد الأولية</p>
+      </div>
+      <select class="wh-lang" id="langSelect" aria-label="Language">
+        <option value="ar">العربية</option>
+        <option value="ckb">کوردی</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+    <div class="wh-actions">
+      <button class="wh-action-btn wh-btn-in" id="btnOpenIn" type="button">↧ إدخال</button>
+      <button class="wh-action-btn wh-btn-out" id="btnOpenOut" type="button">↥ إخراج</button>
+    </div>
+    <div class="wh-backup-row">
+      <button class="wh-backup-btn" id="btnExportBackup" type="button">⬇ حفظ نسخة على جهازي</button>
+      <button class="wh-backup-btn" id="btnImportBackup" type="button">⬆ استرجاع نسخة من جهازي</button>
+      <input type="file" accept="application/json" class="wh-file-input" id="fileImportInput">
+      <span class="wh-backup-note">تُحفظ البيانات أونلاين وتتزامن فوراً بين المدير والموظفة.</span>
+    </div>
+  </div>
+
+  <div class="wh-tabs">
+    <button class="wh-tab active" data-view="dash" type="button">لوحة الجرد</button>
+    <button class="wh-tab" data-view="log" type="button">سجل الحركات</button>
+    <button class="wh-tab" data-view="mats" type="button">بيانات المواد والأكواد</button>
+    <button class="wh-tab" data-view="settings" type="button">إعدادات المخزن والشركة</button>
+    <button class="wh-tab" data-view="reports" type="button">التقارير</button>
+    <button class="wh-tab" data-view="audit" type="button">سجل التعديلات والنسخ</button>
+  </div>
+
+  <div class="wh-body">
+    <!-- لوحة الجرد -->
+    <div id="view-dash" class="wh-view active">
+      <div class="wh-expiry-alert-panel" id="expiryAlertPanel">
+        <div class="wh-expiry-head">
+          <span>⚠️ تنبيه: المواد الأولية التالية متبقٍّ على انتهاء صلاحيتها شهر واحد أو أقل!</span>
+        </div>
+        <ul class="wh-alert-list" id="expiryAlertList"></ul>
+      </div>
+
+      <div class="wh-stock-alert-panel" id="stockAlertPanel">
+        <div class="wh-alert-head">
+          <span>تنبيه: المواد الأولية التالية وصلت للحد الأدنى من المخزون أو أقل!</span>
+        </div>
+        <ul class="wh-alert-list" id="stockAlertList"></ul>
+      </div>
+
+      <div class="wh-stats">
+        <div class="wh-stat"><div class="num" id="statMatCount">0</div><div class="lbl">عدد المواد المسجّلة</div></div>
+        <div class="wh-stat"><div class="num" id="statTxCount">0</div><div class="lbl">إجمالي الحركات الكلية</div></div>
+        <div class="wh-stat warn"><div class="num" id="statLowCount">0</div><div class="lbl">مواد تحت الحد الأدنى</div></div>
+      </div>
+      <div class="wh-toolbar">
+        <input class="wh-input wh-search" id="dashSearch" placeholder="ابحث بالكود أو اسم المادة...">
+        <select class="wh-select" id="dashCategory">
+          <option value="">كل الفئات</option>
+          <option value="مادة أولية">مادة أولية</option>
+          <option value="مادة جاهزة">مادة جاهزة</option>
+        </select>
+        <button class="wh-btn-ghost" id="btnExportExcel" type="button" style="white-space:nowrap;">⬇ تصدير التقرير Excel</button>
+      </div>
+      <div id="dashTableWrap"></div>
+    </div>
+
+    <!-- سجل الحركات -->
+    <div id="view-log" class="wh-view">
+      <div class="wh-toolbar">
+        <input class="wh-input wh-search" id="logSearch" placeholder="ابحث برقم الوصل، الكود، اسم المادة، أو التاريخ...">
+        <select class="wh-select" id="logFilterMonth"></select>
+        <select class="wh-select" id="logFilterType">
+          <option value="">كل الأنواع</option>
+          <option value="in">إدخال مواد</option>
+          <option value="out">إخراج مواد</option>
+          <option value="init">رصيد افتتاحي</option>
+        </select>
+      </div>
+      <div id="logTableWrap"></div>
+    </div>
+
+    <!-- بيانات المواد والأكواد -->
+    <div id="view-mats" class="wh-view">
+      <p class="wh-section-title">إضافة / تعديل مادة أولية مع كود الصنف</p>
+      <form class="wh-mat-form" id="matForm">
+        <input type="hidden" id="matEditId">
+        <div class="wh-field"><label>كود المادة (Barcode / Code) *</label><input class="wh-input en" id="matCode" required placeholder="مثال: MAT-001"></div>
+        <div class="wh-field"><label>اسم المادة الأولية *</label><input class="wh-input" id="matName" required placeholder="اسم المادة..."></div>
+        <div class="wh-field"><label>الفئة</label>
+          <select class="wh-select" id="matCategory">
+            <option value="مادة أولية">مادة أولية</option>
+            <option value="مادة جاهزة">مادة جاهزة</option>
+          </select>
+        </div>
+        <div class="wh-field">
+          <label>وحدة القياس</label>
+          <select class="wh-select" id="matUnit"></select>
+          <input class="wh-input" id="matNewUnit" placeholder="اكتب الوحدة الجديدة..." style="display:none; margin-top:6px;">
+        </div>
+        <div class="wh-field"><label>الحد الأدنى للمخزون</label><input class="wh-input" type="number" min="0" id="matMinStock"></div>
+        <div class="wh-field full"><label>ملاحظات عامة</label><input class="wh-input" id="matNotes"></div>
+        <div class="wh-form-actions">
+          <button type="submit" class="wh-btn-primary" id="matSubmitBtn">حفظ المادة</button>
+          <button type="button" class="wh-btn-ghost" id="matCancelBtn" style="display:none">إلغاء التعديل</button>
+        </div>
+      </form>
+      <p class="wh-section-title">قائمة المواد المسجلة</p>
+      <div class="wh-toolbar">
+        <select class="wh-select" id="matsCategoryFilter">
+          <option value="">كل الفئات</option>
+          <option value="مادة أولية">مادة أولية</option>
+          <option value="مادة جاهزة">مادة جاهزة</option>
+        </select>
+      </div>
+      <div id="matsTableWrap"></div>
+    </div>
+    
+    <!-- إعدادات المخزن والشركة -->
+    <div id="view-reports" class="wh-view"><div id="repBox"></div></div>
+    <div id="view-audit" class="wh-view"><div id="auditBox"></div></div>
+    <div id="view-settings" class="wh-view">
+      <p class="wh-section-title">⚙️ إعدادات اسم المخزن ومعلومات المنشأة</p>
+      <div class="wh-settings-box">
+        <form id="settingsForm">
+          <div class="wh-settings-grid">
+            <div class="wh-field"><label>اسم المخزن أو المعمل *</label><input class="wh-input" id="setWarehouseName" required></div>
+            <div class="wh-field"><label>اسم الشركة / المؤسسة</label><input class="wh-input" id="setCompanyName"></div>
+            <div class="wh-field"><label>عنوان الموقع</label><input class="wh-input" id="setWarehouseAddress"></div>
+            <div class="wh-field"><label>رقم الهاتف / التواصل</label><input class="wh-input en" id="setWarehousePhone"></div>
+          </div>
+          <button type="submit" class="wh-btn-primary">حفظ الإعدادات العامة</button>
+        </form>
+      </div>
+
+      <p class="wh-section-title" style="margin-top:25px;">♻️ تصفير وإغلاق السنة المخزنية</p>
+      <div class="wh-settings-box">
+        <h3 style="margin-top:0; color:var(--steel-dark);">إغلاق السنة ونقل الأرصدة الافتتاحية</h3>
+        <p style="font-size:13px; color:var(--ink-soft); line-height:1.6;">
+          يقوم النظام بحذف سجل الحركات الحالي بالكامل لتسريع البرنامج، مع نقل جرد المواد الحالي وكمياتها لتصبح هي الرصيد الافتتاحي للعام الجديد.
+        </p>
+        <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
+          <button type="button" class="wh-btn-primary" id="btnClearYearBtn" style="background:var(--dmg);">تصفير وبدء سنة جديدة</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal / Slip لإدخال أو إخراج عدة مواد في وصل واحد -->
+  <div class="wh-overlay" id="txOverlay">
+    <div class="wh-slip">
+      <div class="wh-slip-head">
+        <h3 id="txSlipTitle">إذن حركة مواد</h3>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span class="wh-stamp" id="txStamp">IN</span>
+          <button type="button" class="wh-close-x" id="txClose">✕</button>
+        </div>
+      </div>
+      <form class="wh-slip-body" id="txForm">
+        <input type="hidden" id="txType">
+        <input type="hidden" id="txEditId">
+        
+        <div style="display:flex; gap:10px; margin-bottom:12px;">
+          <div class="wh-field" style="flex:1;"><label>تاريخ الحركة *</label><input type="date" id="txDate" required></div>
+          <div class="wh-field" style="flex:2;"><label>ملاحظات عامة للوصل *</label><input id="txNotes" required placeholder="سبب الإدخال أو الإخراج..."></div>
+          <div class="wh-field" style="flex:1;"><label>نوع / سبب الحركة</label><select id="txSub"></select></div>
+          <div class="wh-field" style="flex:1;"><label id="lblParty">الجهة</label><input id="txParty" placeholder="مورّد / جهة مستلمة"></div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <label style="font-weight:bold; font-size:13px; color:var(--steel-dark);">المواد المشمولة في هذا الوصل:</label>
+          <button type="button" class="wh-btn-primary" id="btnAddRow" style="padding:4px 10px; font-size:12px;">+ إضافة مادة للوصل</button>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="slip-items-table" id="slipItemsTable">
+            <thead>
+              <tr>
+                <th style="width:130px;">كود المادة</th>
+                <th>اسم المادة</th>
+                <th style="width:100px;">الكمية</th>
+                <th id="thExpCol" style="width:150px;">الاكسباير</th>
+                <th style="width:40px;">حذف</th>
+              </tr>
+            </thead>
+            <tbody id="slipItemsBody">
+              <!-- الصفوف تتولد ديناميكياً -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="wh-form-actions" style="margin-top:15px;">
+          <button type="submit" class="wh-btn-primary" style="flex:1;">اعتماد وحفظ الوصل</button>
+          <button type="button" class="wh-btn-ghost" id="txCancelBtn">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Datalist للأكواد والأسماء الذكية -->
+  <datalist id="globalCodesList"></datalist>
+  <datalist id="globalNamesList"></datalist>
+
+  <div class="wh-toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+  const root = document.getElementById('app-root');
+  if(!root) return;
+  const $ = (sel) => root.querySelector(sel);
+  const $$ = (sel) => Array.from(root.querySelectorAll(sel));
+
+  let materials = [];
+  let transactions = [];
+  let settings = {
+    warehouseName: 'نظام إدارة المخزون',
+    companyName: 'مخزن المواد الأولية',
+    address: '',
+    phone: ''
+  };
+  
+  const DEFAULT_UNITS = ['قطعة','كرتون','برميل','كغم','لتر','متر'];
+  const NEW_UNIT_VALUE = '__new__';
+  let customUnits = [];
+
+  function allUnits() { return DEFAULT_UNITS.concat(customUnits); }
+
+  function ensureUnit(u) {
+    u = (u||'').trim();
+    if(!u || allUnits().includes(u)) return;
+    customUnits.push(u);
+    saveData('customUnits', customUnits);
+  }
+
+  function populateUnits(selected) {
+    const sel = $('#matUnit');
+    if(!sel) return;
+    sel.innerHTML = allUnits().map(u => `<option value="${escapeHtml(u)}">${escapeHtml(tl(u))}</option>`).join('')
+      + `<option value="${NEW_UNIT_VALUE}">${escapeHtml(tl('＋ إضافة وحدة جديدة...'))}</option>`;
+    sel.value = (selected && allUnits().includes(selected)) ? selected : DEFAULT_UNITS[0];
+    const ni = $('#matNewUnit');
+    if(ni) { ni.value = ''; ni.style.display = 'none'; }
+  }
+
+  // تحويل الفئات القديمة (نص حر) إلى الفئتين المعتمدتين مع الحفاظ على النص القديم في الملاحظات
+  function normalizeCategories() {
+    let changed = false;
+    materials.forEach(m => {
+      if(m.category !== 'مادة أولية' && m.category !== 'مادة جاهزة') {
+        const old = (m.category || '').trim();
+        if(old) m.notes = (m.notes ? m.notes + ' | ' : '') + 'الفئة السابقة: ' + old;
+        m.category = 'مادة أولية';
+        changed = true;
+      }
+    });
+    if(changed) saveData('materials', materials);
+  }
+
+  let isFirstLoad = true; 
+  const STORAGE_PREFIX = 'whRawMaterialsV2_';
+
+  // ===== اللغات: العربية / الكردية (سوراني) / الإنجليزية =====
+  const LANGS = ['ar','ckb','en'];
+  const NORM = (x) => String(x).replace(/[\u064B-\u0652\uFE0F]/g, '');
+  const I18N_RAW = {"نظام إدارة مخزن المواد الأولية": ["Raw Materials Warehouse Management System", "سیستەمی بەڕێوەبردنی کۆگای مادە خاوەکان"], "نظام إدارة المخزون": ["Inventory Management System", "سیستەمی بەڕێوەبردنی کۆگا"], "مخزن المواد الأولية": ["Raw Materials Warehouse", "کۆگای مادە خاوەکان"], "↧ إدخال": ["↧ In", "↧ داخڵکردن"], "↥ إخراج": ["↥ Out", "↥ دەرکردن"], "⬇ حفظ نسخة على جهازي": ["⬇ Save a backup to my device", "⬇ پاشەکەوتکردنی کۆپییەک لەسەر ئامێرەکەم"], "⬆ استرجاع نسخة من جهازي": ["⬆ Restore a backup from my device", "⬆ گەڕاندنەوەی کۆپییەک لە ئامێرەکەمەوە"], "تُحفظ بياناتك تلقائياً داخل هذا المتصفح على هذا الجهاز.": ["Your data is saved automatically inside this browser on this device.", "داتاکانت بە شێوەی خۆکار لەم وێبگەڕە و لەم ئامێرەدا پاشەکەوت دەکرێن."], "لوحة الجرد": ["Inventory Dashboard", "تەختەی جەرد"], "سجل الحركات": ["Transaction Log", "تۆماری جووڵەکان"], "بيانات المواد والأكواد": ["Materials & Codes", "زانیاری مادە و کۆدەکان"], "إعدادات المخزن والشركة": ["Warehouse & Company Settings", "ڕێکخستنەکانی کۆگا و کۆمپانیا"], "⚠️ تنبيه: المواد الأولية التالية متبقٍّ على انتهاء صلاحيتها شهر واحد أو أقل!": ["⚠️ Warning: the following materials expire within one month or less!", "⚠️ ئاگاداری: ئەم مادانەی خوارەوە یەک مانگ یان کەمتریان ماوە بۆ بەسەرچوونیان!"], "تنبيه: المواد الأولية التالية وصلت للحد الأدنى من المخزون أو أقل!": ["Warning: the following materials have reached the minimum stock level or lower!", "ئاگاداری: ئەم مادانەی خوارەوە گەیشتوونەتە کەمترین ڕادەی کۆگا یان کەمترن!"], "عدد المواد المسجّلة": ["Registered materials", "ژمارەی مادە تۆمارکراوەکان"], "إجمالي الحركات الكلية": ["Total transactions", "کۆی گشتی جووڵەکان"], "مواد تحت الحد الأدنى": ["Materials below minimum", "مادەکانی خوار کەمترین ڕادە"], "ابحث بالكود أو اسم المادة...": ["Search by code or material name...", "بگەڕێ بە کۆد یان ناوی مادە..."], "كل الفئات": ["All categories", "هەموو پۆلەکان"], "مادة أولية": ["Raw material", "مادەی خاو"], "مادة جاهزة": ["Finished material", "مادەی ئامادە"], "⬇ تصدير التقرير Excel": ["⬇ Export report to Excel", "⬇ هەناردەکردنی ڕاپۆرت بۆ Excel"], "ابحث برقم الوصل، الكود، اسم المادة، أو التاريخ...": ["Search by slip number, code, material name, or date...", "بگەڕێ بە ژمارەی وەسڵ، کۆد، ناوی مادە، یان بەروار..."], "كل الأنواع": ["All types", "هەموو جۆرەکان"], "إدخال مواد": ["Materials in", "داخڵکردنی مادە"], "إخراج مواد": ["Materials out", "دەرکردنی مادە"], "رصيد افتتاحي": ["Opening balance", "هاوسەنگی سەرەتایی"], "كل الأشهر": ["All months", "هەموو مانگەکان"], "إضافة / تعديل مادة أولية مع كود الصنف": ["Add / edit a material with item code", "زیادکردن / دەستکاریکردنی مادە لەگەڵ کۆدی جۆر"], "كود المادة (Barcode / Code) *": ["Material code (Barcode / Code) *", "کۆدی مادە (Barcode / Code) *"], "اسم المادة الأولية *": ["Material name *", "ناوی مادە *"], "الفئة": ["Category", "پۆل"], "وحدة القياس": ["Unit of measure", "یەکەی پێوان"], "الحد الأدنى للمخزون": ["Minimum stock level", "کەمترین ڕادەی کۆگا"], "ملاحظات عامة": ["General notes", "تێبینی گشتی"], "مثال: MAT-001": ["Example: MAT-001", "نموونە: MAT-001"], "اسم المادة...": ["Material name...", "ناوی مادە..."], "اكتب الوحدة الجديدة...": ["Type the new unit...", "یەکەی نوێ بنووسە..."], "＋ إضافة وحدة جديدة...": ["＋ Add new unit...", "＋ زیادکردنی یەکەی نوێ..."], "حفظ المادة": ["Save material", "پاشەکەوتکردنی مادە"], "تحديث المادة": ["Update material", "نوێکردنەوەی مادە"], "إلغاء التعديل": ["Cancel editing", "هەڵوەشاندنەوەی دەستکاری"], "قائمة المواد المسجلة": ["Registered materials list", "لیستی مادە تۆمارکراوەکان"], "⚙️ إعدادات اسم المخزن ومعلومات المنشأة": ["⚙️ Warehouse name and facility information", "⚙️ ڕێکخستنەکانی ناوی کۆگا و زانیاری دامەزراوە"], "اسم المخزن أو المعمل *": ["Warehouse or factory name *", "ناوی کۆگا یان کارگە *"], "اسم الشركة / المؤسسة": ["Company / organization name", "ناوی کۆمپانیا / دامەزراوە"], "عنوان الموقع": ["Location address", "ناونیشانی شوێن"], "رقم الهاتف / التواصل": ["Phone / contact number", "ژمارەی تەلەفۆن / پەیوەندی"], "حفظ الإعدادات العامة": ["Save general settings", "پاشەکەوتکردنی ڕێکخستنە گشتییەکان"], "♻️ تصفير وإغلاق السنة المخزنية": ["♻️ Reset and close the inventory year", "♻️ سفرکردنەوە و داخستنی ساڵی کۆگا"], "إغلاق السنة ونقل الأرصدة الافتتاحية": ["Close the year and carry over opening balances", "داخستنی ساڵ و گواستنەوەی هاوسەنگییە سەرەتاییەکان"], "يقوم النظام بحذف سجل الحركات الحالي بالكامل لتسريع البرنامج، مع نقل جرد المواد الحالي وكمياتها لتصبح هي الرصيد الافتتاحي للعام الجديد.": ["The system deletes the entire current transaction log to speed up the program, and carries over the current inventory and quantities to become the opening balance of the new year.", "سیستەمەکە تۆماری جووڵەکانی ئێستا بە تەواوی دەسڕێتەوە بۆ خێراکردنی بەرنامەکە، و جەردی ئێستای مادەکان و بڕەکانیان دەگوازێتەوە بۆ ئەوەی ببێتە هاوسەنگی سەرەتایی ساڵی نوێ."], "تصفير وبدء سنة جديدة": ["Reset and start a new year", "سفرکردنەوە و دەستپێکردنی ساڵێکی نوێ"], "إذن حركة مواد": ["Material movement slip", "وەسڵی جووڵەی مادە"], "تاريخ الحركة *": ["Transaction date *", "بەرواری جووڵە *"], "ملاحظات عامة للوصل *": ["General notes for the slip *", "تێبینی گشتی بۆ وەسڵ *"], "سبب الإدخال أو الإخراج...": ["Reason for in or out...", "هۆکاری داخڵکردن یان دەرکردن..."], "المواد المشمولة في هذا الوصل:": ["Materials included in this slip:", "ئەو مادانەی لەم وەسڵەدا هەن:"], "+ إضافة مادة للوصل": ["+ Add material to slip", "+ زیادکردنی مادە بۆ وەسڵ"], "كود المادة": ["Material code", "کۆدی مادە"], "اسم المادة": ["Material name", "ناوی مادە"], "الكمية": ["Quantity", "بڕ"], "الاكسباير": ["Expiry", "بەسەرچوون"], "حذف": ["Delete", "سڕینەوە"], "اعتماد وحفظ الوصل": ["Approve and save slip", "پەسەندکردن و پاشەکەوتکردنی وەسڵ"], "إلغاء": ["Cancel", "هەڵوەشاندنەوە"], "كود المادة...": ["Material code...", "کۆدی مادە..."], "تاريخ الاكسباير": ["Expiry date", "بەرواری بەسەرچوون"], "الوجبة / الاكسباير": ["Batch / Expiry", "بەتش / بەسەرچوون"], "بدون اكسباير": ["No expiry", "بێ بەرواری بەسەرچوون"], "إذن إدخال مواد أولية": ["Materials In Slip", "وەسڵی داخڵکردنی مادە"], "إذن إخراج مواد أولية": ["Materials Out Slip", "وەسڵی دەرکردنی مادە"], "تعديل إذن إدخال مواد أولية": ["Edit Materials In Slip", "دەستکاریکردنی وەسڵی داخڵکردنی مادە"], "تعديل إذن إخراج مواد أولية": ["Edit Materials Out Slip", "دەستکاریکردنی وەسڵی دەرکردنی مادە"], "تعديل رصيد افتتاحي": ["Edit opening balance", "دەستکاریکردنی هاوسەنگی سەرەتایی"], "رصيد افتتاحي مرحّل": ["Carried-over opening balance", "هاوسەنگی سەرەتایی گوازراوە"], "رصيد افتتاحي مرحّل من العام السابق": ["Opening balance carried over from the previous year", "هاوسەنگی سەرەتایی گوازراوە لە ساڵی ڕابردوو"], "الحالة": ["Status", "دۆخ"], "الوحدة": ["Unit", "یەکە"], "الكمية الحالية الإجمالية": ["Total current quantity", "کۆی بڕی ئێستا"], "اسم المادة الأولية": ["Material name", "ناوی مادە"], "الحد الأدنى": ["Minimum", "کەمترین ڕادە"], "إجراء": ["Action", "کردار"], "تحت الحد الأدنى": ["Below minimum", "خوار کەمترین ڕادە"], "جيد": ["Good", "باش"], "لا توجد مواد أولية تطابق بحثك.": ["No materials match your search.", "هیچ مادەیەک نییە لەگەڵ گەڕانەکەت بگونجێت."], "(المتبقي: {0} / الحد: {1})": ["(Remaining: {0} / Limit: {1})", "(ماوە: {0} / کەمترین ڕادە: {1})"], "(وجبة: {0} | متبقي: {1} يوم)": ["(Batch: {0} | {1} days left)", "(بەتش: {0} | {1} ڕۆژ ماوە)"], "(وجبة: {0} | منتهية الصلاحية!)": ["(Batch: {0} | Expired!)", "(بەتش: {0} | بەسەرچووە!)"], "الوجبات:": ["Batches:", "بەتشەکان:"], "لا توجد وجبات نشطة": ["No active batches", "هیچ بەتشێکی چالاک نییە"], "(متاح: {0})": ["(Available: {0})", "(بەردەست: {0})"], "سجل الحركات فارغ لهذا التحديد.": ["The transaction log is empty for this selection.", "تۆماری جووڵەکان بۆ ئەم هەڵبژاردنە بەتاڵە."], "رقم الوصل": ["Slip No.", "ژمارەی وەسڵ"], "التاريخ": ["Date", "بەروار"], "النوع": ["Type", "جۆر"], "المواد والكميات": ["Materials & quantities", "مادە و بڕەکان"], "ملاحظات الوصل": ["Slip notes", "تێبینییەکانی وەسڵ"], "اكسباير:": ["Expiry:", "بەسەرچوون:"], "إدخال": ["In", "داخڵکردن"], "افتتاحي": ["Opening", "سەرەتایی"], "إخراج": ["Out", "دەرکردن"], "تعديل الحركة": ["Edit transaction", "دەستکاریکردنی جووڵە"], "طباعة الوصل": ["Print slip", "چاپکردنی وەسڵ"], "لا توجد مواد أولية مسجلة.": ["No materials registered.", "هیچ مادەیەک تۆمار نەکراوە."], "لا توجد مواد مسجلة.": ["No materials registered.", "هیچ مادەیەک تۆمار نەکراوە."], "حذف هذا الوصل بالكامل؟": ["Delete this slip entirely?", "ئەم وەسڵە بە تەواوی بسڕدرێتەوە؟"], "حذف المادة الأولية؟": ["Delete this material?", "مادەکە بسڕدرێتەوە؟"], "تم الحذف بنجاح": ["Deleted successfully", "بە سەرکەوتوویی سڕایەوە"], "تم الحذف": ["Deleted", "سڕایەوە"], "كود المادة مستخدم مسبقاً!": ["This material code is already in use!", "کۆدی مادە پێشتر بەکارهاتووە!"], "تم الحفظ بنجاح": ["Saved successfully", "بە سەرکەوتوویی پاشەکەوت کرا"], "اكتب اسم الوحدة الجديدة أولاً": ["Type the new unit name first", "سەرەتا ناوی یەکەی نوێ بنووسە"], "يجب أن يحتوي الوصل على مادة واحدة على الأقل": ["The slip must contain at least one material", "پێویستە وەسڵەکە لانیکەم یەک مادەی تێدا بێت"], "يرجى تحديد كود المادة أو اسمها لكل صف": ["Please specify the material code or name for every row", "تکایە کۆد یان ناوی مادە بۆ هەر ڕیزێک دیاری بکە"], "المادة غير مسجلة أو الكود خاطئ: \"{0}\"": ["Material not registered or wrong code: \"{0}\"", "مادەکە تۆمار نەکراوە یان کۆدەکە هەڵەیە: \"{0}\""], "الكمية المطلوبة للمادة ({0}) أكبر من المتاح في المخزن ({1})!": ["The requested quantity for ({0}) exceeds the available stock ({1})!", "بڕی داواکراو بۆ مادەی ({0}) زیاترە لەوەی لە کۆگادا هەیە ({1})!"], "تم تحديث الوصل بنجاح": ["Slip updated successfully", "وەسڵەکە بە سەرکەوتوویی نوێکرایەوە"], "تم تسجيل وإصدار الوصل بنجاح": ["Slip recorded and issued successfully", "وەسڵەکە بە سەرکەوتوویی تۆمار کرا و دەرچوو"], "تم حفظ إعدادات المخزن بنجاح": ["Warehouse settings saved successfully", "ڕێکخستنەکانی کۆگا بە سەرکەوتوویی پاشەکەوت کران"], "تم تحميل ملف النسخة الاحتياطية": ["Backup file downloaded", "فایلی کۆپی پاشەکەوت داگیرا"], "تم استعادة البيانات بنجاح": ["Data restored successfully", "داتاکان بە سەرکەوتوویی گەڕێندرانەوە"], "الملف غير متوافق!": ["Incompatible file!", "فایلەکە گونجاو نییە!"], "ملف غير صالح!": ["Invalid file!", "فایلێکی نادروستە!"], "تم إلغاء التصفير": ["Reset cancelled", "سفرکردنەوە هەڵوەشێندرایەوە"], "المخزن فارغ مسبقاً!": ["The warehouse is already empty!", "کۆگا پێشتر بەتاڵە!"], "المخزن فارغ، لا توجد بيانات لتصديرها!": ["The warehouse is empty, no data to export!", "کۆگا بەتاڵە، هیچ داتایەک نییە بۆ هەناردەکردن!"], "تم تصدير تقرير Excel بنجاح 📊": ["Excel report exported successfully 📊", "ڕاپۆرتی Excel بە سەرکەوتوویی هەناردە کرا 📊"], "حدث خطأ أثناء التصدير!": ["An error occurred during export!", "هەڵەیەک ڕوویدا لە کاتی هەناردەکردندا!"], "تصفير": ["RESET", "سفرکردنەوە"], "أنت تطلب تصفير الحركات وبدء سنة مالية جديدة.\nسيقوم النظام بنقل الجرد الحالي كأرصدة افتتاحية.\n\nلتأكيد التصفير، اكتب كلمة (تصفير):": ["You are requesting to reset all transactions and start a new financial year.\nThe system will carry the current inventory over as opening balances.\n\nTo confirm, type the word (RESET):", "داوای سفرکردنەوەی جووڵەکان و دەستپێکردنی ساڵێکی دارایی نوێ دەکەیت.\nسیستەمەکە جەردی ئێستا دەگوازێتەوە وەک هاوسەنگی سەرەتایی.\n\nبۆ دڵنیابوونەوە لە سفرکردنەوە، ووشەی (سفرکردنەوە) بنووسە:"], "تم تصفير المخازن ونقل الأرصدة الافتتاحية للسنة الجديدة بنجاح!": ["The warehouse was reset and opening balances were carried over to the new year successfully!", "کۆگاکان سفر کرانەوە و هاوسەنگییە سەرەتاییەکان بۆ ساڵی نوێ بە سەرکەوتوویی گوازرانەوە!"], "إذن مخزني - رقم": ["Warehouse slip - No.", "وەسڵی کۆگا - ژمارە"], "العنوان: ": ["Address: ", "ناونیشان: "], "هاتف: ": ["Phone: ", "تەلەفۆن: "], "رقم الوصل:": ["Slip No.:", "ژمارەی وەسڵ:"], "تاريخ الحركة:": ["Transaction date:", "بەرواری جووڵە:"], "م": ["#", "ژ"], "كود الصنف": ["Item code", "کۆدی جۆر"], "ملاحظات الوصل:": ["Slip notes:", "تێبینییەکانی وەسڵ:"], "لا توجد ملاحظات": ["No notes", "هیچ تێبینییەک نییە"], "أمين المخزن": ["Storekeeper", "کۆگادار"], "المستلم / المعتمد": ["Receiver / Approver", "وەرگر / پەسەندکەر"], "جرد المواد الأولية": ["Materials Inventory", "جەردی مادەکان"], "تقرير جرد المواد والكميات الحالية": ["Materials and current quantities inventory report", "ڕاپۆرتی جەردی مادە و بڕە ئێستاکان"], "تاريخ الجرد: {0}": ["Inventory date: {0}", "بەرواری جەرد: {0}"], "الوجبات (الاكسباير)": ["Batches (Expiry)", "بەتشەکان (بەسەرچوون)"], "تقرير_المخزن": ["Warehouse_Report", "ڕاپۆرتی_کۆگا"], "قطعة": ["Piece", "دانە"], "كرتون": ["Carton", "کارتۆن"], "برميل": ["Barrel", "بەرمیل"], "كغم": ["Kg", "کگم"], "لتر": ["Liter", "لیتر"], "متر": ["Meter", "مەتر"]};
+  const I18N = {};
+  Object.keys(I18N_RAW).forEach(k => { I18N[NORM(k)] = I18N_RAW[k]; });
+  [
+   ['التقارير','Reports','ڕاپۆرتەکان'],['سجل التعديلات والنسخ','Audit log & backups','تۆماری دەستکاری و کۆپییەکان'],
+   ['نوع / سبب الحركة','Movement type / reason','جۆر / هۆکاری جووڵە'],['الجهة','Party','لایەن'],['المورّد','Supplier','دابینکەر'],
+   ['الجهة المستلمة','Receiving party','لایەنی وەرگر'],['مورّد / جهة مستلمة','Supplier / receiving party','دابینکەر / لایەنی وەرگر'],
+   ['جارٍ التحميل…','Loading…','باردەکرێت…'],['تُحفظ البيانات أونلاين وتتزامن فوراً بين المدير والموظفة.','Data is saved online and synced instantly between manager and employee.','داتاکان ئۆنلاین پاشەکەوت دەکرێن و یەکسەر لە نێوان بەڕێوەبەر و کارمەند هاوکات دەکرێن.'],
+   ['شراء من مورّد','Purchase from supplier','کڕین لە دابینکەر'],['إرجاع من الإنتاج','Return from production','گەڕاندنەوە لە بەرهەمهێنان'],['تسوية زيادة جرد','Stock count surplus adjustment','ڕێکخستنی زیادەی جەرد'],
+   ['صرف للإنتاج','Issued to production','دەرکردن بۆ بەرهەمهێنان'],['بيع / تسليم','Sale / delivery','فرۆشتن / تەسلیم'],['تالف / هالك','Damaged / waste','خراپ / فەوتاو'],['تسوية نقص جرد','Stock count shortage adjustment','ڕێکخستنی کەمی جەرد'],
+   ['تسجيل الدخول','Sign in','چوونەژوورەوە'],['البريد الإلكتروني','Email','ئیمەیڵ'],['كلمة المرور','Password','وشەی نهێنی'],['دخول','Login','چوونەژوورەوە'],['جارٍ الدخول…','Signing in…','چوونەژوورەوە…'],
+   ['البريد أو كلمة المرور غير صحيحة','Incorrect email or password','ئیمەیڵ یان وشەی نهێنی هەڵەیە'],['هذا الحساب غير مفعّل. تواصل مع المدير.','This account is not activated. Contact the manager.','ئەم هەژمارە چالاک نەکراوە. پەیوەندی بە بەڕێوەبەرەوە بکە.'],
+   ['حساب المدير','Manager account','هەژماری بەڕێوەبەر'],['حساب الموظفة','Employee account','هەژماری کارمەند'],['حساب مشاهدة','View-only account','هەژماری تەنها بینین'],['خروج','Logout','دەرچوون'],
+   ['آخر التعديلات','Recent changes','دوایین دەستکارییەکان'],['المحذوفات (يمكن استعادتها)','Deleted items (can be restored)','سڕاوەکان (دەگەڕێنرێنەوە)'],['النسخ الاحتياطية التلقائية','Automatic backups','کۆپییە پاشەکەوتەکانی خۆکار'],
+   ['أخذ نسخة الآن','Take a backup now','وەرگرتنی کۆپی ئێستا'],['تنزيل آخر نسخة','Download latest backup','داگرتنی دوایین کۆپی'],['استعادة','Restore','گەڕاندنەوە'],['إضافة','Added','زیادکرا'],['تعديل','Edited','دەستکاریکرا'],['حذف','Deleted','سڕایەوە'],
+   ['مادة','material','مادە'],['وصل','slip','وەسڵ'],['تمت الاستعادة','Restored','گەڕێندرایەوە'],['تم أخذ نسخة','Backup taken','کۆپی وەرگیرا'],['لا توجد بيانات','No data','هیچ داتایەک نییە'],
+   ['رقم الوصل مكرر، أعد المحاولة','Duplicate slip number, try again','ژمارەی وەسڵ دووبارەیە، دووبارە هەوڵبدەرەوە'],['تعذّر الحفظ:','Could not save:','پاشەکەوت نەکرا:'],['تعذّر تحميل البيانات','Could not load data','داتاکان بار نەکران'],
+   ['المتصفح لا يدعم قراءة الباركود. استخدم Chrome على أندرويد.','This browser does not support barcode scanning. Use Chrome on Android.','ئەم وێبگەڕە پشتگیری خوێندنەوەی باڕکۆد ناکات. Chrome لە ئەندرۆید بەکاربێنە.'],['تعذّر فتح الكاميرا','Could not open the camera','کامێرا نەکرایەوە'],['إغلاق','Close','داخستن'],
+   ['النوع:','Type:','جۆر:'],['المورّد:','Supplier:','دابینکەر:'],['الجهة المستلمة:','Receiving party:','لایەنی وەرگر:'],
+   ['حركة مادة','Material movement','جووڵەی مادە'],['مواد راكدة','Idle materials','مادە ڕاوەستاوەکان'],['حسب الجهة','By party','بەپێی لایەن'],
+   ['المادة (اكتب الكود أو الاسم)','Material (type code or name)','مادە (کۆد یان ناو بنووسە)'],['من','From','لە'],['إلى','To','بۆ'],['هذا الشهر','This month','ئەم مانگە'],['آخر 30 يوم','Last 30 days','دوایین ٣٠ ڕۆژ'],['هذه السنة','This year','ئەمساڵ'],['الكل','All','هەموو'],
+   ['الداخل','In','داخڵ'],['الخارج','Out','دەرچوو'],['الصافي','Net','پوختە'],['الجهة المستلمة / المورّد','Party','لایەن'],['عدد الوصولات','Number of slips','ژمارەی وەسڵەکان'],['إجمالي الداخل','Total in','کۆی داخڵ'],['إجمالي الخارج','Total out','کۆی دەرچوو'],
+   ['آخر حركة','Last movement','دوایین جووڵە'],['الرصيد','Balance','هاوسەنگی'],['الكود','Code','کۆد'],['عدم الحركة لمدة','No movement for','بێ جووڵە بۆ ماوەی'],['يوم','days','ڕۆژ'],['تنزيل CSV','Download CSV','داگرتنی CSV'],
+   ['اختر مادة صحيحة من القائمة','Choose a valid material from the list','مادەیەکی دروست لە لیستەکە هەڵبژێرە'],['لا توجد حركات في هذه الفترة','No movements in this period','هیچ جووڵەیەک نییە لەم ماوەیەدا'],['لا توجد مواد راكدة 👍','No idle materials 👍','هیچ مادەیەکی ڕاوەستاو نییە 👍'],['لا توجد حركات بجهات مسجلة','No movements with a registered party','هیچ جووڵەیەک نییە بە لایەنی تۆمارکراو']
+  ].forEach(r => { I18N[NORM(r[0])] = [r[1], r[2]]; });
+
+  let lang = 'ar';
+  function isRtl() { return lang !== 'en'; }
+  // يترجم النص العربي إلى اللغة الحالية، ويعيد النص كما هو إن لم تتوفر ترجمة (مثل أسماء المواد وملاحظات المستخدم)
+  function tl(key, ...args) {
+    let out = key;
+    if(lang !== 'ar' && key !== undefined && key !== null) {
+      const e = I18N[NORM(key)];
+      if(e) out = e[lang === 'en' ? 0 : 1] || key;
+    }
+    args.forEach((a, i) => { out = String(out).split('{' + i + '}').join(a); });
+    return out;
+  }
+
+  const staticItems = [];
+  function collectStatic() {
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let n;
+    while((n = w.nextNode())) {
+      const p = n.parentNode;
+      if(!p || /^(SCRIPT|STYLE)$/.test(p.nodeName)) continue;
+      const raw = n.nodeValue;
+      const key = raw.trim();
+      if(key && I18N[NORM(key)]) {
+        staticItems.push({ node: n, key, lead: raw.slice(0, raw.indexOf(key)), trail: raw.slice(raw.indexOf(key) + key.length) });
+      }
+    }
+    root.querySelectorAll('[placeholder],[title]').forEach(el => {
+      ['placeholder','title'].forEach(a => {
+        const v = el.getAttribute(a);
+        if(v && I18N[NORM(v)]) staticItems.push({ el, attr: a, key: v });
+      });
+    });
+  }
+  function applyStatic() {
+    staticItems.forEach(it => {
+      if(it.node) it.node.nodeValue = it.lead + tl(it.key) + it.trail;
+      else it.el.setAttribute(it.attr, tl(it.key));
+    });
+  }
+
+  const DEFAULT_SETTING_NAMES = ['نظام إدارة المخزون', 'مخزن المواد الأولية'];
+  function fromDisplayDefault(v) { return DEFAULT_SETTING_NAMES.find(k => tl(k) === v) || v; }
+  function applyHeaderNames() {
+    $('#headerWarehouseName').textContent = tl(settings.warehouseName || 'نظام إدارة المخزون');
+    $('#headerCompanySub').textContent = tl(settings.companyName || 'مخزن المواد الأولية');
+  }
+  function refreshSlipTitles() {
+    const type = $('#txType').value;
+    if(!type) return;
+    const edit = !!$('#txEditId').value;
+    const key = type === 'in' ? (edit ? 'تعديل إذن إدخال مواد أولية' : 'إذن إدخال مواد أولية')
+              : type === 'init' ? 'تعديل رصيد افتتاحي'
+              : (edit ? 'تعديل إذن إخراج مواد أولية' : 'إذن إخراج مواد أولية');
+    $('#txSlipTitle').textContent = tl(key);
+    $('#thExpCol').textContent = tl(type === 'out' ? 'الوجبة / الاكسباير' : 'تاريخ الاكسباير');
+  }
+  function applyLanguage() {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = isRtl() ? 'rtl' : 'ltr';
+    document.title = tl('نظام إدارة مخزن المواد الأولية');
+    const ls = $('#langSelect');
+    if(ls) ls.value = lang;
+    applyStatic();
+
+    // قائمة الوحدات: نحافظ على الاختيار الحالي
+    const sel = $('#matUnit');
+    if(sel) {
+      const cur = sel.value, ni = $('#matNewUnit'), newTxt = ni ? ni.value : '';
+      populateUnits(cur);
+      if(cur === NEW_UNIT_VALUE) { sel.value = NEW_UNIT_VALUE; ni.style.display = 'block'; ni.value = newTxt; }
+    }
+    applyHeaderNames();
+    $('#matSubmitBtn').textContent = tl($('#matEditId').value ? 'تحديث المادة' : 'حفظ المادة');
+    refreshSlipTitles();
+    if ($('#txType') && $('#txType').value) setSub($('#txType').value, $('#txSub').value, $('#txParty').value);
+    renderAll();
+    if (typeof setRoleLabel === 'function' && ME) setRoleLabel();
+    if ($('#view-reports.active')) renderReports();
+    if ($('#view-audit.active') && ROLE === 'manager') renderAudit();
+  }
+
+  function loadSettings() {
+    try {
+      if (cloudSettings) settings = cloudSettings;
+    } catch(e){}
+    applyHeaderNames();
+    $('#setWarehouseName').value = tl(settings.warehouseName || '');
+    $('#setCompanyName').value = tl(settings.companyName || '');
+    $('#setWarehouseAddress').value = settings.address || '';
+    $('#setWarehousePhone').value = settings.phone || '';
+  }
+
+  function getNextSlipNumber() {
+    const mx = Math.max(Number(shared.lastSlipNumber)||0, ...transactions.map(t => Number(t.id)||0));
+    const n = mx + 1;
+    saveData('lastSlipNumber', n);
+    return n;
+  }
+
+  function currentMonthStr() { return new Date().toISOString().slice(0,7); } 
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function todayStr(){ return new Date().toISOString().slice(0,10); }
+  function fmtNum(n){ if(n===null||n===undefined||isNaN(n)) return '—'; return Number(n).toLocaleString('en-US'); }
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  function showToast(msg, isErr){
+    const t = $('#toast');
+    if(!t) return;
+    t.textContent = msg;
+    t.className = 'wh-toast show' + (isErr ? ' err' : '');
+    clearTimeout(showToast._tm);
+    showToast._tm = setTimeout(()=> t.className = 'wh-toast', 2400);
+  }
+
+  // ===== المزامنة مع Supabase =====
+  function showFatal(m){ const g = document.getElementById('whGate'); if (g) { g.style.display = 'flex'; g.style.flexDirection = 'column'; g.textContent = m; } }
+  window.addEventListener('error', e => showFatal('حدث خطأ: ' + (e.message || '')));
+  if (!window.supabase) { showFatal('تعذّر تحميل مكتبة الربط. تأكد من الإنترنت أو جرّب شبكة/متصفح آخر ثم أعد تحميل الصفحة.'); throw new Error('supabase lib missing'); }
+  const SB = window.supabase.createClient('https://zwxjnpujbkeucfshlgtw.supabase.co', 'sb_publishable_5L_0dwVbXdK7bZVVRR8F0g_a9v4XUDk');
+  let ROLE = 'employee', cloudSettings = null, shared = {}, lastSent = { materials: {}, transactions: {} };
+  let pending = 0, refetchTimer = null, started = false, ME = '', lastFull = Date.now();
+  function onErr(e){ showToast(tl('تعذّر الحفظ:') + ' ' + ((e && e.message) || ''), true); }
+  function loadData(key, fallback){ return fallback; }
+  function saveData(key, val){
+    pending++;
+    const done = () => { pending--; if(pending === 0) scheduleFetch(); };
+    const run = async () => {
+      if (key === 'materials' || key === 'transactions') {
+        const prev = lastSent[key], next = {}, add = [], upd = [];
+        val.forEach(o => { if (key === 'transactions' && !o.by && !(String(o.id) in prev)) o.by = ME.split('@')[0];
+          const id = String(o.id), j = JSON.stringify(o); next[id] = j;
+          if (!(id in prev)) add.push({ id, j }); else if (prev[id] !== j) upd.push({ id, j }); });
+        const del = Object.keys(prev).filter(id => !(id in next));
+        lastSent[key] = next;
+        const lg = [].concat(add.map(x => ['إضافة', x.id]), upd.map(x => ['تعديل', x.id]), del.map(x => ['حذف', x]))
+          .map(a => ({ who: ME, action: a[0], tbl: key === 'materials' ? 'مادة' : 'وصل', ref: String(a[1]) }));
+        if (lg.length) SB.from('audit').insert(lg).then(() => {});
+        if (del.length) await SB.from('archive').insert(del.map(id => ({ tbl: key, ref: id, who: ME, j: prev[id] })));
+        if (add.length) { const r = await SB.from(key).insert(add); if (r.error) { r.error.code === '23505' ? showToast(tl('رقم الوصل مكرر، أعد المحاولة'), true) : onErr(r.error); } }
+        if (upd.length) { const r = await SB.from(key).upsert(upd); if (r.error) onErr(r.error); }
+        if (del.length) { const r = await SB.from(key).delete().in('id', del); if (r.error) onErr(r.error); }
+      } else if (key === 'settings') {
+        const r = await SB.from('settings').upsert({ id: 'main', j: JSON.stringify(val) }); if (r.error) onErr(r.error);
+      } else {
+        shared[key] = val;
+        const r = await SB.from('shared').upsert({ id: key, j: JSON.stringify(val) }); if (r.error) onErr(r.error);
+      }
+    };
+    run().catch(onErr).finally(done);
+    return true;
+  }
+  function scheduleFetch(){ clearTimeout(refetchTimer); refetchTimer = setTimeout(fetchAll, 300); }
+  const parseRows = rows => (rows || []).map(r => { try { return JSON.parse(r.j); } catch(e){ return null; } }).filter(Boolean);
+  async function selAll(tbl){
+    let all = [], from = 0;
+    for (;;) { const r = await SB.from(tbl).select('*').order('id').range(from, from + 999);
+      if (r.error) return r; all = all.concat(r.data || []); if (!r.data || r.data.length < 1000) break; from += 1000; }
+    return { data: all, error: null };
+  }
+  async function fetchAll(){
+    if (pending > 0) return;
+    lastFull = Date.now();
+    const [m, t, st, sh] = await Promise.all([selAll('materials'), selAll('transactions'), SB.from('settings').select('*'), SB.from('shared').select('*')]);
+    if (m.error || t.error) { showToast(tl('تعذّر تحميل البيانات'), true); return; }
+    if (pending > 0) return;
+    materials = parseRows(m.data).sort((a,b) => String(a.id).localeCompare(String(b.id)));
+    transactions = parseRows(t.data).sort((a,b) => (a.createdAt||0)-(b.createdAt||0) || (Number(a.id)||0)-(Number(b.id)||0));
+    lastSent.materials = {}; materials.forEach(o => lastSent.materials[String(o.id)] = JSON.stringify(o));
+    lastSent.transactions = {}; transactions.forEach(o => lastSent.transactions[String(o.id)] = JSON.stringify(o));
+    const sRow = (st.data || [])[0]; try { cloudSettings = sRow ? JSON.parse(sRow.j) : null; } catch(e){}
+    (sh.data || []).forEach(r => { try { shared[r.id] = JSON.parse(r.j); } catch(e){} });
+    if (Array.isArray(shared.customUnits)) customUnits = shared.customUnits;
+    materials.forEach(x => ensureUnit(x.unit));
+    populateUnits(); loadSettings(); renderAll();
+  }
+  const fmtT = t => new Date(t).toLocaleString(lang === 'en' ? 'en-GB' : lang === 'ckb' ? 'ckb-IQ' : 'ar-EG');
+  async function snapshot(){ const str = JSON.stringify({ materials, transactions, settings, customUnits }); await SB.from('backups').insert({ j: str }); }
+  async function autoBackup(){
+    const r = await SB.from('backups').select('id,at').order('at', { ascending: false });
+    if (r.error) return;
+    const d = r.data || [];
+    if (!d.length || Date.now() - new Date(d[0].at).getTime() > 7*864e5) { await snapshot(); }
+    if (d.length > 8) await SB.from('backups').delete().in('id', d.slice(8).map(x => x.id));
+  }
+  async function renderAudit(){
+    const box = $('#auditBox'); box.innerHTML = tl('جارٍ التحميل…');
+    const [a, ar, b] = await Promise.all([SB.from('audit').select('*').order('at', { ascending: false }).limit(100), SB.from('archive').select('*').order('at', { ascending: false }).limit(50), SB.from('backups').select('id,at').order('at', { ascending: false })]);
+    const th = 'style="padding:6px;border-bottom:1px solid #DDD3BC;text-align:start"';
+    box.innerHTML = '<h3>🗂 ' + tl('آخر التعديلات') + '</h3><div style="overflow-x:auto"><table style="width:100%;font-size:13px;border-collapse:collapse">' + (a.data||[]).map(r => `<tr><td ${th}>${fmtT(r.at)}</td><td ${th}>${escapeHtml(r.who||'')}</td><td ${th}>${r.action} ${r.tbl}</td><td ${th}>${escapeHtml(r.ref||'')}</td></tr>`).join('') + '</table></div>'
+      + '<h3>♻️ ' + tl('المحذوفات (يمكن استعادتها)') + '</h3><div style="overflow-x:auto"><table style="width:100%;font-size:13px;border-collapse:collapse">' + (ar.data||[]).map(r => `<tr><td ${th}>${fmtT(r.at)}</td><td ${th}>${escapeHtml(r.who||'')}</td><td ${th}>${tl(r.tbl === 'materials' ? 'مادة' : 'وصل')} ${escapeHtml(r.ref)}</td><td ${th}><button data-rest="${r.id}" type="button">${tl('استعادة')}</button></td></tr>`).join('') + '</table></div>'
+      + '<h3>💾 ' + tl('النسخ الاحتياطية التلقائية') + '</h3><button id="btnSnapNow" type="button">' + tl('أخذ نسخة الآن') + '</button> <button id="btnSnapDl" type="button">⬇ ' + tl('تنزيل آخر نسخة') + '</button><div style="font-size:13px;margin-top:8px">' + (b.data||[]).map(r => fmtT(r.at)).join(' • ') + '</div>';
+    $$('[data-rest]').forEach(btn => btn.onclick = () => {
+      const row = ar.data.find(x => String(x.id) === btn.dataset.rest); if (!row) return;
+      const o = JSON.parse(row.j);
+      if (row.tbl === 'materials') { if (!materials.some(m => m.id === o.id)) materials.push(o); saveData('materials', materials); }
+      else { if (!transactions.some(t => String(t.id) === String(o.id))) transactions.push(o); saveData('transactions', transactions); }
+      SB.from('archive').delete().eq('id', row.id).then(() => { renderAll(); renderAudit(); showToast(tl('تمت الاستعادة')); });
+    });
+    $('#btnSnapNow').onclick = async () => { await snapshot(); renderAudit(); showToast(tl('تم أخذ نسخة')); };
+    $('#btnSnapDl').onclick = async () => { const r = await SB.from('backups').select('j').order('at', { ascending: false }).limit(1); if (r.data && r.data[0]) saveFile(r.data[0].j, 'Backup_' + todayStr() + '.json'); };
+  }
+  function loginUI(msg){
+    const g = $('#whGate'); g.style.display = 'flex';
+    const inp = 'width:100%;padding:12px;margin-bottom:8px;border:1px solid #DDD3BC;border-radius:8px;font-size:15px';
+    g.innerHTML = '<div style="max-width:320px;width:100%"><div style="font-size:20px;margin-bottom:14px">📦 ' + tl('تسجيل الدخول') + '</div>'
+      + '<input id="whEmail" type="email" dir="ltr" placeholder="' + tl('البريد الإلكتروني') + '" style="' + inp + '">'
+      + '<input id="whPass" type="password" dir="ltr" placeholder="' + tl('كلمة المرور') + '" style="' + inp + '">'
+      + '<button id="whLoginBtn" type="button" style="width:100%;padding:12px;border:none;border-radius:8px;background:#33454C;color:#fff;font-weight:700;font-size:15px;cursor:pointer">' + tl('دخول') + '</button>'
+      + '<div id="whLoginMsg" style="color:#B0453B;font-size:13px;margin-top:10px">' + (msg ? tl(msg) : '') + '</div></div>';
+    const go = async () => {
+      $('#whLoginMsg').textContent = tl('جارٍ الدخول…');
+      const r = await SB.auth.signInWithPassword({ email: $('#whEmail').value.trim(), password: $('#whPass').value });
+      if (r.error) { $('#whLoginMsg').textContent = tl('البريد أو كلمة المرور غير صحيحة'); return; }
+      boot(r.data.session);
+    };
+    $('#whLoginBtn').onclick = go; $('#whPass').onkeydown = e => { if (e.key === 'Enter') go(); };
+  }
+  function setRoleLabel(){
+    const lab = $('#whRole'); if (!lab) return;
+    lab.innerHTML = '👤 ' + tl(ROLE === 'manager' ? 'حساب المدير' : ROLE === 'viewer' ? 'حساب مشاهدة' : 'حساب الموظفة') + ' &nbsp; <button id="whLogout" type="button" style="background:none;border:1px solid #E0992F;color:#E0992F;border-radius:6px;padding:2px 10px;cursor:pointer;font-family:inherit">' + tl('خروج') + '</button>';
+    $('#whLogout').onclick = async () => { await SB.auth.signOut(); location.reload(); };
+  }
+  async function boot(session){
+    if (!session) return loginUI();
+    const r = await SB.from('roles').select('role').eq('user_id', session.user.id).maybeSingle();
+    if (r.error || !r.data) { await SB.auth.signOut(); return loginUI('هذا الحساب غير مفعّل. تواصل مع المدير.'); }
+    ROLE = r.data.role; ME = session.user.email || '';
+    root.classList.toggle('role-emp', ROLE !== 'manager');
+    root.classList.toggle('role-view', ROLE === 'viewer');
+    setRoleLabel();
+    $('#whGate').style.display = 'none';
+    await fetchAll();
+    if (ROLE === 'manager' && !started) { const at = $('.wh-tab[data-view="audit"]'); if (at) at.addEventListener('click', renderAudit); autoBackup(); }
+    if (!started) { started = true;
+      let rt = null, subOnce = false;
+      const refresh = () => { clearTimeout(rt); rt = setTimeout(() => { materials.forEach(x => ensureUnit(x.unit)); populateUnits(); loadSettings(); renderAll(); }, 150); };
+      const applyChange = p => {
+        const t = p.table, row = p.new && p.new.id !== undefined ? p.new : null;
+        if (t === 'materials' || t === 'transactions') {
+          const arr = t === 'materials' ? materials : transactions;
+          if (p.eventType === 'DELETE') { const id = String(p.old.id), k = arr.findIndex(o => String(o.id) === id); if (k > -1) arr.splice(k, 1); delete lastSent[t][id]; }
+          else if (row) { let o; try { o = JSON.parse(row.j); } catch(e){ return; }
+            const k = arr.findIndex(x => String(x.id) === String(o.id)); if (k > -1) arr[k] = o; else arr.push(o);
+            lastSent[t][String(o.id)] = row.j;
+            arr.sort(t === 'materials' ? (a,b) => String(a.id).localeCompare(String(b.id)) : (a,b) => (a.createdAt||0)-(b.createdAt||0) || (Number(a.id)||0)-(Number(b.id)||0)); }
+          else return;
+        } else if (t === 'settings' && row) { try { cloudSettings = JSON.parse(row.j); } catch(e){ return; } }
+        else if (t === 'shared' && row) { try { shared[row.id] = JSON.parse(row.j); } catch(e){ return; } if (Array.isArray(shared.customUnits)) customUnits = shared.customUnits; }
+        else return;
+        refresh();
+      };
+      SB.channel('wh').on('postgres_changes', { event: '*', schema: 'public' }, applyChange).subscribe(st => { if (st === 'SUBSCRIBED') { if (subOnce) fetchAll(); subOnce = true; } });
+      document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - lastFull > 1800000) fetchAll(); });
+    }
+  }
+  async function startCloud(){
+    const { data } = await SB.auth.getSession();
+    boot(data.session);
+  }
+  function saveFile(blobOrStr, filename){
+    const blob = blobOrStr instanceof Blob ? blobOrStr : new Blob([blobOrStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+
+  function findMaterial(query) {
+    if(!query) return null;
+    const q = query.trim().toLowerCase();
+    return materials.find(m => (m.code && m.code.toLowerCase() === q) || (m.name && m.name.toLowerCase() === q)) || null;
+  }
+
+  // يعطي كوداً تسلسلياً تلقائياً لأي مادة بلا كود (كحال النسخ الاحتياطية القديمة قبل إضافة الأكواد)
+  // الكود الناتج رقم تسلسلي يبدأ من 001 وهو قابل للتعديل لاحقاً من نموذج بيانات المادة
+  function assignMissingMaterialCodes() {
+    const usedCodes = new Set(
+      materials.filter(m => m.code && m.code.trim() !== '').map(m => m.code.trim().toLowerCase())
+    );
+
+    let maxSeq = 0;
+    usedCodes.forEach(c => {
+      const match = c.match(/^(\d+)$/);
+      if(match) {
+        const n = Number(match[1]);
+        if(n > maxSeq) maxSeq = n;
+      }
+    });
+
+    let changed = false;
+    materials.forEach(m => {
+      if(!m.code || m.code.trim() === '') {
+        let nextCode;
+        do {
+          maxSeq += 1;
+          nextCode = String(maxSeq).padStart(3, '0');
+        } while(usedCodes.has(nextCode.toLowerCase()));
+        m.code = nextCode;
+        usedCodes.add(nextCode.toLowerCase());
+        changed = true;
+      }
+    });
+
+    if(changed) saveData('materials', materials);
+    return changed;
+  }
+
+  function computeBalance(materialNameOrCode, excludeTxId) {
+    const mat = findMaterial(materialNameOrCode);
+    if(!mat) return { balance: 0, batches: {} };
+    
+    const matName = mat.name.trim().toLowerCase();
+    let inSum = 0, outSum = 0;
+    let batches = {}; 
+
+    transactions.forEach(t=>{
+      if(excludeTxId !== undefined && excludeTxId !== null && excludeTxId !== '' && String(t.id) === String(excludeTxId)) return;
+      if(!t.items) {
+        if((t.materialName||'').trim().toLowerCase() === matName) {
+          const exp = t.expiryDate || 'بدون اكسباير';
+          if(t.type === 'in' || t.type === 'init') {
+            inSum += Number(t.qty);
+            batches[exp] = (batches[exp] || 0) + Number(t.qty);
+          } else if(t.type === 'out') {
+            outSum += Number(t.qty);
+            batches[exp] = (batches[exp] || 0) - Number(t.qty);
+          }
+        }
+      } else {
+        t.items.forEach(item => {
+          const itemMat = findMaterial(item.materialQuery);
+          if(itemMat && itemMat.name.trim().toLowerCase() === matName) {
+            const exp = item.expiryDate || 'بدون اكسباير';
+            if(t.type === 'in' || t.type === 'init') {
+              inSum += Number(item.qty);
+              batches[exp] = (batches[exp] || 0) + Number(item.qty);
+            } else if(t.type === 'out') {
+              outSum += Number(item.qty);
+              batches[exp] = (batches[exp] || 0) - Number(item.qty);
+            }
+          }
+        });
+      }
+    });
+
+    Object.keys(batches).forEach(k => { if(batches[k] <= 0) delete batches[k]; });
+    return { balance: inSum - outSum, batches };
+  }
+
+  function updateMonthFilters() {
+    const monthSelect = $('#logFilterMonth');
+    if(!monthSelect) return;
+    const savedValue = monthSelect.value;
+    const months = new Set();
+    const curMonth = currentMonthStr();
+    
+    months.add(curMonth); 
+    transactions.forEach(t => { if(t.date) months.add(t.date.slice(0, 7)); });
+    const sorted = Array.from(months).sort((a,b)=>b.localeCompare(a));
+    monthSelect.innerHTML = `<option value="">${tl('كل الأشهر')}</option>` + sorted.map(m=>`<option value="${m}">${m}</option>`).join('');
+    
+    if (isFirstLoad) {
+      monthSelect.value = curMonth;
+      isFirstLoad = false;
+    } else {
+      monthSelect.value = savedValue;
+    }
+  }
+
+  function renderAll(){
+    updateMonthFilters();
+    renderDash();
+    renderLog();
+    renderMats();
+    const globalCodesList = $('#globalCodesList');
+    const globalNamesList = $('#globalNamesList');
+    if(globalCodesList) {
+      globalCodesList.innerHTML = materials.map(m=>`<option value="${escapeHtml(m.code)}">${escapeHtml(m.name)}</option>`).join('');
+    }
+    if(globalNamesList) {
+      globalNamesList.innerHTML = materials.map(m=>`<option value="${escapeHtml(m.name)}">${escapeHtml(m.code)}</option>`).join('');
+    }
+  }
+
+  function renderDash(){
+    const search = ($('#dashSearch').value||'').trim().toLowerCase();
+    $('#statMatCount').textContent = materials.length;
+    $('#statTxCount').textContent = transactions.length;
+
+    const catFilter = ($('#dashCategory').value||'');
+    const matched = materials.filter(m => (!search || (m.code && m.code.toLowerCase().includes(search)) || m.name.toLowerCase().includes(search)) && (!catFilter || m.category === catFilter));
+    let lowCount = 0;
+    let lowItemsHtml = '';
+    let expiringItemsHtml = '';
+    let expiringCount = 0;
+
+    const wrap = $('#dashTableWrap');
+    if(matched.length === 0){
+      wrap.innerHTML = `<div class="wh-empty">${tl('لا توجد مواد أولية تطابق بحثك.')}</div>`;
+      $('#stockAlertPanel').classList.remove('show');
+      $('#expiryAlertPanel').classList.remove('show');
+      $('#statLowCount').textContent = '0';
+      return;
+    }
+
+    const today = new Date();
+
+    let tbodyHtml = matched.map(m => {
+      const b = computeBalance(m.name);
+      const isLow = m.minStock !== '' && m.minStock !== null && b.balance <= Number(m.minStock);
+      if(isLow) {
+        lowCount++;
+        lowItemsHtml += `<li class="wh-alert-item">🔴 <strong>(${escapeHtml(m.code)}) ${escapeHtml(m.name)}</strong> ${tl('(المتبقي: {0} / الحد: {1})', fmtNum(b.balance), m.minStock)}</li>`;
+      }
+
+      const batchKeys = Object.keys(b.batches);
+      batchKeys.forEach(exp => {
+        if (exp && exp !== 'بدون اكسباير' && b.batches[exp] > 0) {
+          const expDate = new Date(exp);
+          const timeDiff = expDate - today;
+          const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+          
+          if (daysDiff <= 30 && daysDiff >= 0) {
+            expiringCount++;
+            expiringItemsHtml += `<li class="wh-expiry-item">⚠️ <strong>(${escapeHtml(m.code)}) ${escapeHtml(m.name)}</strong> ${tl('(وجبة: {0} | متبقي: {1} يوم)', exp, daysDiff)}</li>`;
+          } else if (daysDiff < 0) {
+            expiringCount++;
+            expiringItemsHtml += `<li class="wh-expiry-item" style="border-color: var(--dmg)">🚨 <strong>(${escapeHtml(m.code)}) ${escapeHtml(m.name)}</strong> ${tl('(وجبة: {0} | منتهية الصلاحية!)', exp)}</li>`;
+          }
+        }
+      });
+
+      const batchStr = batchKeys.length > 0 
+        ? `<span class="wh-batch-details">${tl('الوجبات:')} ${batchKeys.map(k => `[${tl(k)}:${fmtNum(b.batches[k])}]`).join(' ')}</span>`
+        : `<span class="wh-batch-details" style="color:var(--dmg)">${tl('لا توجد وجبات نشطة')}</span>`;
+
+      return `<tr>
+        <td class="en" style="font-weight:bold; color:var(--steel);">${escapeHtml(m.code)}</td>
+        <td>${escapeHtml(m.name)}</td>
+        <td>${escapeHtml(tl(m.category||'—'))}</td>
+        <td style="font-weight:700">${fmtNum(b.balance)} ${batchStr}</td>
+        <td>${escapeHtml(tl(m.unit||'قطعة'))}</td>
+        <td>${isLow ? `<span class="badge badge-low">${tl('تحت الحد الأدنى')}</span>` : `<span class="badge badge-ok">${tl('جيد')}</span>`}</td>
+      </tr>`;
+    }).join('');
+
+    $('#statLowCount').textContent = lowCount;
+    
+    if(expiringCount > 0) {
+      $('#expiryAlertPanel').classList.add('show');
+      $('#expiryAlertList').innerHTML = expiringItemsHtml;
+    } else {
+      $('#expiryAlertPanel').classList.remove('show');
+    }
+
+    if(lowCount > 0) {
+      $('#stockAlertPanel').classList.add('show');
+      $('#stockAlertList').innerHTML = lowItemsHtml;
+    } else {
+      $('#stockAlertPanel').classList.remove('show');
+    }
+
+    wrap.innerHTML = `<table class="wh-table">
+      <thead><tr><th>${tl('كود المادة')}</th><th>${tl('اسم المادة')}</th><th>${tl('الفئة')}</th><th>${tl('الكمية الحالية الإجمالية')}</th><th>${tl('الوحدة')}</th><th>${tl('الحالة')}</th></tr></thead>
+      <tbody>${tbodyHtml}</tbody>
+    </table>`;
+  }
+
+  function renderLog(){
+    const search = ($('#logSearch').value||'').trim().toLowerCase();
+    const type = $('#logFilterType').value;
+    const month = $('#logFilterMonth').value;
+
+    let filtered = transactions.slice().sort((a,b)=> (b.date||'').localeCompare(a.date||'') || b.createdAt - a.createdAt);
+    
+    if(search) {
+      filtered = filtered.filter(t => {
+        const matchesId = String(t.id).toLowerCase() === search; 
+        const matchesDate = t.date && t.date.includes(search); 
+        const matchesNote = t.notes && t.notes.toLowerCase().includes(search);
+        
+        let matchesItem = false;
+        if(t.items) {
+          matchesItem = t.items.some(i => i.materialQuery.toLowerCase().includes(search));
+        } else if(t.materialName) {
+          matchesItem = t.materialName.toLowerCase().includes(search);
+        }
+        return matchesId || matchesDate || matchesNote || matchesItem;
+      });
+    }
+    
+    if(type) filtered = filtered.filter(t => t.type === type);
+    if(month) filtered = filtered.filter(t => t.date && t.date.startsWith(month));
+
+    const wrap = $('#logTableWrap');
+    if(filtered.length === 0){
+      wrap.innerHTML = `<div class="wh-empty">${tl('سجل الحركات فارغ لهذا التحديد.')}</div>`;
+      return;
+    }
+
+    wrap.innerHTML = `<table class="wh-table">
+      <thead><tr><th>${tl('رقم الوصل')}</th><th>${tl('التاريخ')}</th><th>${tl('النوع')}</th><th>${tl('المواد والكميات')}</th><th>${tl('ملاحظات الوصل')}</th><th>${tl('إجراء')}</th></tr></thead>
+      <tbody>
+        ${filtered.map(t => {
+          let itemsDesc = '';
+          if(t.items) {
+            itemsDesc = t.items.map(i => {
+              const mat = findMaterial(i.materialQuery);
+              const nameStr = mat ? `(${mat.code})${mat.name}` : i.materialQuery;
+              return `<div>• <strong>${escapeHtml(nameStr)}</strong>: ${fmtNum(i.qty)}${i.expiryDate ? '('+tl('اكسباير:')+' '+tl(i.expiryDate)+')' : ''}</div>`;
+            }).join('');
+          } else {
+            itemsDesc = `<div>• <strong>${escapeHtml(t.materialName)}</strong>: ${fmtNum(t.qty)}${t.expiryDate ? '('+tl('اكسباير:')+' '+tl(t.expiryDate)+')' : ''}</div>`;
+          }
+
+          return `<tr>
+            <td class="en" style="font-weight:bold; color:var(--steel);">${t.id}</td>
+            <td>${t.date||'—'}</td>
+            <td>${t.type==='in'?`<span class="badge badge-in">${tl('إدخال')}</span>`:t.type==='init'?`<span class="badge badge-ok">${tl('افتتاحي')}</span>`:`<span class="badge badge-out">${tl('إخراج')}</span>`}</td>
+            <td>${itemsDesc}</td>
+            <td>${escapeHtml(tl(t.notes||'—'))}${t.sub ? '<br><small style="color:var(--ink-soft)">' + escapeHtml(tl(t.sub)) + (t.party ? ' • ' + escapeHtml(t.party) : '') + '</small>' : ''}</td>
+            <td style="white-space:nowrap;">
+              <button class="wh-icon-btn" data-edit-tx="${t.id}" title="${tl('تعديل الحركة')}" type="button" style="color: var(--amber-dark);">✎</button>
+              <button class="wh-icon-btn" data-print-tx="${t.id}" title="${tl('طباعة الوصل')}" type="button" style="color: var(--steel); font-size:16px;">🖨️</button>
+              <button class="wh-icon-btn" data-del-tx="${t.id}" title="${tl('حذف')}" type="button">🗑</button>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+
+    $$('[data-del-tx]').forEach(btn => {       btn.onclick = () => {         if(!confirm(tl('حذف هذا الوصل بالكامل؟'))) return;         transactions = transactions.filter(x => String(x.id) !== String(btn.dataset.delTx));         saveData('transactions', transactions);         renderAll();         showToast(tl('تم الحذف بنجاح'));       };     });
+
+    $$('[data-edit-tx]').forEach(btn => {
+      btn.onclick = () => {
+        const tx = transactions.find(x => String(x.id) === String(btn.dataset.editTx));
+        if(!tx) return;
+        openTxEdit(tx);
+      };
+    });
+
+    $$
+('[data-print-tx]').forEach(btn => {
+      btn.onclick = () => {
+        const tx = transactions.find(x => String(x.id) === String(btn.dataset.printTx));
+        if(!tx) return;
+        
+        const typeText = tl(tx.type === 'in' ? 'إذن إدخال مواد أولية' : tx.type === 'init' ? 'رصيد افتتاحي مرحّل' : 'إذن إخراج مواد أولية');
+
+        let itemsRows = '';
+        if(tx.items) {
+          itemsRows = tx.items.map((i, idx) => {
+            const mat = findMaterial(i.materialQuery);
+            const code = mat ? mat.code : '—';
+            const name = mat ? mat.name : i.materialQuery;
+            const unit = tl(mat ? (mat.unit || 'قطعة') : 'قطعة');
+            return `<tr>
+              <td style="text-align:center;">${idx+1}</td>
+              <td style="text-align:center; font-family: monospace;">${code}</td>
+              <td>${name}</td>
+              <td style="text-align:center; font-weight: bold;">${fmtNum(i.qty)} ${unit}</td>
+              <td style="text-align:center;">${tl(i.expiryDate || '—')}</td>
+            </tr>`;
+          }).join('');
+        }
+
+        let printFrame = document.getElementById('whPrintFrame');
+        if (!printFrame) {
+          printFrame = document.createElement('iframe');
+          printFrame.id = 'whPrintFrame';
+          printFrame.style.cssText = 'position:fixed; right:-1000px; top:-1000px; width:0; height:0; border:none;';
+          document.body.appendChild(printFrame);
+        }
+
+        const doc = printFrame.contentWindow.document;
+        doc.open();
+        doc.write(`
+          <!DOCTYPE html>
+          <html lang="${lang}" dir="${isRtl() ? 'rtl' : 'ltr'}">
+          <head>
+            <meta charset="UTF-8">
+            <title>${tl('إذن مخزني - رقم')} ${tx.id}</title>
+            <style>
+              body { font-family: 'Tajawal', Arial, sans-serif; direction: ${isRtl() ? 'rtl' : 'ltr'}; color: #222; margin: 0; padding: 15px; background: #fff; }
+              .slip-container { max-width: 720px; margin: 0 auto; border: 2px solid #223037; padding: 25px; border-radius: 10px; background: #fff; box-sizing: border-box; }
+              .store-header { text-align: center; border-bottom: 2px solid #223037; padding-bottom: 12px; margin-bottom: 15px; }
+              .store-header h2 { margin: 0; color: #223037; font-size: 22px; }
+              .store-header p { margin: 4px 0 0; font-size: 12.5px; color: #555; }
+              .slip-title { text-align: center; background: #F3EFE4; color: #B9761C; padding: 6px; font-weight: bold; font-size: 15px; border-radius: 6px; margin-bottom: 15px; border: 1px dashed #DDD3BC; }
+              .meta-box { display: flex; justify-content: space-between; font-size: 13.5px; margin-bottom: 15px; background: #faf9f5; padding: 10px 14px; border-radius: 6px; border: 1px solid #eee; }
+              table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+              th { background: #223037; color: #fff; padding: 8px 10px; border: 1px solid #223037; text-align: start; }
+              td { padding: 8px 10px; border: 1px solid #ddd; }
+              tr:nth-child(even) { background: #fcfcfc; }
+              .notes-box { font-size: 13px; margin-bottom: 30px; background: #fffdf8; padding: 10px; border: 1px solid #DDD3BC; border-radius: 6px; }
+              .signatures { display: flex; justify-content: space-between; margin-top: 40px; font-size: 13.5px; font-weight: bold; }
+              .sig-box { text-align: center; width: 200px; border-top: 1px dashed #333; padding-top: 8px; color: #444; }
+            </style>
+          </head>
+          <body>
+            <div class="slip-container">
+              <div class="store-header">
+                <h2>${escapeHtml(tl(settings.warehouseName))}</h2>
+                <p>${settings.companyName ? tl(settings.companyName) + ' | ' : ''} ${settings.address ? tl('العنوان: ') + settings.address + ' | ' : ''} ${settings.phone ? tl('هاتف: ') + settings.phone : ''}</p>
+              </div>
+              
+              <div class="slip-title">${typeText}</div>
+
+              <div class="meta-box">
+                <div><strong>${tl('رقم الوصل:')}</strong> <span style="font-family:monospace; font-weight:bold;">${tx.id}</span></div>
+                <div><strong>${tl('تاريخ الحركة:')}</strong> ${tx.date}</div>
+              </div>
+
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width: 40px; text-align:center;">${tl('م')}</th>
+                    <th style="width: 110px;">${tl('كود الصنف')}</th>
+                    <th>${tl('اسم المادة الأولية')}</th>
+                    <th style="width: 120px; text-align:center;">${tl('الكمية')}</th>
+                    <th style="width: 120px; text-align:center;">${tl('الاكسباير')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${itemsRows}
+                </tbody>
+              </table>
+
+              <div class="notes-box">
+                <strong>${tl('ملاحظات الوصل:')}</strong> ${escapeHtml(tl(tx.notes || 'لا توجد ملاحظات'))}${tx.sub ? '<br><strong>' + tl('النوع:') + '</strong> ' + escapeHtml(tl(tx.sub)) : ''}${tx.party ? '<br><strong>' + tl(tx.type === 'in' ? 'المورّد:' : 'الجهة المستلمة:') + '</strong> ' + escapeHtml(tx.party) : ''}
+              </div>
+
+              <div class="signatures">
+                <div class="sig-box">${tl('أمين المخزن')}${tx.by ? ': ' + escapeHtml(tx.by) : ''}</div>
+                <div class="sig-box">${tl('المستلم / المعتمد')}</div>
+              </div>
+            </div>
+          </body>
+          </html>
+        `);
+        doc.close();
+        setTimeout(() => {
+          printFrame.contentWindow.focus();
+          printFrame.contentWindow.print();
+        }, 250);
+      };
+    });
+  }
+
+  function renderMats(){
+    const wrap = $('#matsTableWrap');
+    const matsCat = ($('#matsCategoryFilter').value || '');
+    const shownMats = materials.filter(m => !matsCat || m.category === matsCat);
+    if(shownMats.length === 0){
+      wrap.innerHTML = `<div class="wh-empty">${tl('لا توجد مواد مسجلة.')}</div>`;
+      return;
+    }
+
+    wrap.innerHTML = `<table class="wh-table">
+      <thead><tr><th>${tl('كود المادة')}</th><th>${tl('اسم المادة الأولية')}</th><th>${tl('الفئة')}</th><th>${tl('الوحدة')}</th><th>${tl('الحد الأدنى')}</th><th>${tl('إجراء')}</th></tr></thead>
+      <tbody>
+        ${shownMats.map(m => `<tr>
+          <td class="en" style="font-weight:bold; color:var(--steel);">${escapeHtml(m.code)}</td>
+          <td>${escapeHtml(m.name)}</td>
+          <td>${escapeHtml(tl(m.category||'—'))}</td>
+          <td>${escapeHtml(tl(m.unit||'—'))}</td>
+          <td>${m.minStock??'—'}</td>
+          <td>
+            <button class="wh-icon-btn" data-edit-mat="${m.id}" type="button">✎</button>
+            <button class="wh-icon-btn" data-del-mat="${m.id}" type="button">🗑</button>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+
+    $$('[data-edit-mat]').forEach(btn => {
+      btn.onclick = () => {
+        const m = materials.find(x => x.id === btn.dataset.editMat);
+        if(!m) return;
+        $('#matEditId').value = m.id; 
+        $('#matCode').value = m.code||'';
+        $('#matName').value = m.name;
+        $('#matCategory').value = m.category||'مادة أولية';
+        ensureUnit(m.unit||'قطعة');
+        populateUnits(m.unit||'قطعة');
+        $('#matMinStock').value = m.minStock??'';
+        $('#matNotes').value = m.notes||'';
+        $('#matSubmitBtn').textContent = tl('تحديث المادة');
+        $('#matCancelBtn').style.display = 'inline-block';
+      };
+    });
+
+    $$('[data-del-mat]').forEach(btn => {       btn.onclick = () => {         if(!confirm(tl('حذف المادة الأولية؟'))) return;         materials = materials.filter(x => x.id !== btn.dataset.delMat);         saveData('materials', materials);         renderAll();         showToast(tl('تم الحذف'));       };     });   }    $$
+('.wh-tab').forEach(tab => {
+    tab.onclick = () => {
+      $$('.wh-tab').forEach(t => t.classList.remove('active'));$$
+('.wh-view').forEach(v => v.classList.remove('active'));
+      tab.classList.add('active');
+      const viewEl = $('#view-' + tab.dataset.view);
+      if(viewEl) viewEl.classList.add('active');
+    };
+  });
+
+  const matForm = $('#matForm');
+  if(matForm) {
+    matForm.onsubmit = (e) => {
+      e.preventDefault();
+      const code = $('#matCode').value.trim();
+      const name = $('#matName').value.trim();
+      if(!code || !name) return;
+
+      let unitVal = $('#matUnit').value;
+      if(unitVal === NEW_UNIT_VALUE) {
+        unitVal = $('#matNewUnit').value.trim();
+        if(!unitVal) { showToast(tl('اكتب اسم الوحدة الجديدة أولاً'), true); return; }
+        ensureUnit(unitVal);
+      }
+
+      const data = {
+        code,
+        name,
+        category: $('#matCategory').value,
+        unit: unitVal,
+        minStock: $('#matMinStock').value !== '' ? Number($('#matMinStock').value) : '',
+        notes: $('#matNotes').value.trim()
+      };
+
+      const editId = $('#matEditId').value; 
+
+      if(editId) {
+        const idx = materials.findIndex(x => x.id === editId);
+        if(idx > -1) {
+          materials[idx] = { ...materials[idx], ...data };
+        }
+        $('#matEditId').value = ''; 
+        $('#matSubmitBtn').textContent = tl('حفظ المادة');
+        $('#matCancelBtn').style.display = 'none';
+      } else {
+        if(materials.find(x => x.code.toLowerCase() === code.toLowerCase())) {
+          showToast(tl('كود المادة مستخدم مسبقاً!'), true); return;
+        }
+        materials.push({ id: uid(), ...data });
+      }
+
+      matForm.reset();
+      populateUnits();
+      saveData('materials', materials);
+      renderAll();
+      showToast(tl('تم الحفظ بنجاح'));
+    };
+  }
+
+  const matCancelBtn = $('#matCancelBtn');
+  if(matCancelBtn) {
+    matCancelBtn.onclick = () => {
+      $('#matEditId').value = '';
+      if(matForm) matForm.reset();
+      populateUnits();
+      $('#matSubmitBtn').textContent = tl('حفظ المادة');
+      matCancelBtn.style.display = 'none';
+    };
+  }
+
+  // يبني حقل الاكسباير: إدخال تاريخ عادي إن لم يوجد إلا وجبة واحدة، أو قائمة اختيار للوجبة عندما تتوفر عدة وجبات (في حالة الإخراج فقط)
+  function refreshExpiryField(tr, mat, presetExpiry) {
+    const td = tr.querySelector('.slip-exp-td');
+    if(!td || !mat) return;
+    const txType = $('#txType').value;
+    const editId = $('#txEditId').value;
+
+    if(txType !== 'out') {
+      td.innerHTML = `<input class="wh-input slip-exp-input" type="date" value="${presetExpiry||''}">`;
+      return;
+    }
+
+    const b = computeBalance(mat.name, editId || undefined);
+    const batchKeys = Object.keys(b.batches).filter(k => b.batches[k] > 0);
+
+    if(batchKeys.length > 1) {
+      const options = batchKeys.map(k => {
+        const val = (k === 'بدون اكسباير') ? '' : k;
+        const label = (k === 'بدون اكسباير') ? tl('بدون اكسباير') : k;
+        const isSelected = (presetExpiry ? presetExpiry === k : false);
+        return `<option value="${val}" ${isSelected ? 'selected' : ''}>${label} ${tl('(متاح: {0})', fmtNum(b.batches[k]))}</option>`;
+      }).join('');
+      td.innerHTML = `<select class="wh-input slip-exp-input">${options}</select>`;
+    } else {
+      const onlyKey = batchKeys[0];
+      const val = (onlyKey && onlyKey !== 'بدون اكسباير') ? onlyKey : (presetExpiry || '');
+      td.innerHTML = `<input class="wh-input slip-exp-input" type="date" value="${val}">`;
+    }
+  }
+
+  function addSlipRow(matCode = '', matName = '', qty = '', expiry = '') {
+    const tbody = $('#slipItemsBody');
+    if(!tbody) return;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input class="wh-input slip-code-input en" list="globalCodesList" placeholder="${tl('كود المادة...')}" value="${escapeHtml(matCode)}"></td>
+      <td><input class="wh-input slip-name-input" list="globalNamesList" placeholder="${tl('اسم المادة...')}" value="${escapeHtml(matName)}"></td>
+      <td><input class="wh-input slip-qty-input" type="number" min="0.01" step="any" required placeholder="${tl('الكمية')}" value="${qty}"></td>
+      <td class="slip-exp-td"><input class="wh-input slip-exp-input" type="date" value="${expiry}"></td>
+      <td style="text-align:center;"><button type="button" class="wh-icon-btn remove-row-btn" style="color:var(--dmg)">🗑</button></td>
+    `;
+    tbody.appendChild(tr);
+
+    const codeInput = tr.querySelector('.slip-code-input');
+    const nameInput = tr.querySelector('.slip-name-input');
+
+    function onCodeChange() {
+      const mat = materials.find(m => m.code && m.code.toLowerCase() === codeInput.value.trim().toLowerCase());
+      if(mat) {
+        nameInput.value = mat.name;
+        refreshExpiryField(tr, mat);
+      }
+    }
+    function onNameChange() {
+      const mat = materials.find(m => m.name && m.name.toLowerCase() === nameInput.value.trim().toLowerCase());
+      if(mat) {
+        codeInput.value = mat.code;
+        refreshExpiryField(tr, mat);
+      }
+    }
+
+    codeInput.addEventListener('input', onCodeChange);
+    codeInput.addEventListener('change', onCodeChange);
+    nameInput.addEventListener('input', onNameChange);
+    nameInput.addEventListener('change', onNameChange);
+
+    tr.querySelector('.remove-row-btn').onclick = () => {
+      if(tbody.querySelectorAll('tr').length > 1) {
+        tr.remove();
+      } else {
+        showToast(tl('يجب أن يحتوي الوصل على مادة واحدة على الأقل'), true);
+      }
+    };
+
+    // عند تعبئة الصف مسبقاً (مثلاً أثناء تعديل حركة سابقة) نجهز حقل الاكسباير المناسب فوراً
+    if(matCode || matName) {
+      const mat = findMaterial(matCode) || findMaterial(matName);
+      if(mat) refreshExpiryField(tr, mat, expiry);
+    }
+  }
+
+  const SUBS = { in: ['شراء من مورّد','إرجاع من الإنتاج','تسوية زيادة جرد'], out: ['صرف للإنتاج','بيع / تسليم','تالف / هالك','تسوية نقص جرد'] };
+  function setSub(type, sub, party) {
+    const sel = $('#txSub'), row = sel.closest('.wh-field');
+    row.style.display = SUBS[type] ? '' : 'none';
+    if (SUBS[type]) { sel.innerHTML = SUBS[type].concat(sub && !SUBS[type].includes(sub) ? [sub] : []).map(x => `<option value="${escapeHtml(x)}">${escapeHtml(tl(x))}</option>`).join(''); sel.value = sub || SUBS[type][0]; }
+    $('#txParty').value = party || '';
+    $('#lblParty').textContent = tl(type === 'in' ? 'المورّد' : 'الجهة المستلمة');
+  }
+  function openTx(type) {
+    $('#txType').value = type;
+    $('#txEditId').value = '';
+    $('#txSlipTitle').textContent = tl(type === 'in' ? 'إذن إدخال مواد أولية' : 'إذن إخراج مواد أولية');
+    $('#txStamp').textContent = type.toUpperCase();
+    $('#txStamp').style.color = type === 'in' ? 'var(--in)' : 'var(--out)';
+    $('#txDate').value = todayStr();
+    $('#txNotes').value = ''; setSub(type, '', '');
+    
+    const tbody = $('#slipItemsBody');
+    tbody.innerHTML = '';
+    
+    const thExpCol = $('#thExpCol');
+    if(type === 'out') {
+      thExpCol.textContent = tl('الوجبة / الاكسباير');
+    } else {
+      thExpCol.textContent = tl('تاريخ الاكسباير');
+    }
+
+    addSlipRow();
+    $('#txOverlay').classList.add('open');
+  }
+
+  // فتح الوصل في وضع التعديل مع تعبئة كل المواد والكميات والتواريخ الخاصة بالحركة المختارة
+  function openTxEdit(tx) {
+    const type = tx.type;
+    $('#txType').value = type;
+    $('#txEditId').value = tx.id;
+    $('#txSlipTitle').textContent = tl(tx.type === 'in' ? 'تعديل إذن إدخال مواد أولية' : tx.type === 'init' ? 'تعديل رصيد افتتاحي' : 'تعديل إذن إخراج مواد أولية');
+    $('#txStamp').textContent = String(tx.type).toUpperCase();
+    $('#txStamp').style.color = tx.type === 'in' ? 'var(--in)' : (tx.type === 'out' ? 'var(--out)' : 'var(--steel)');
+    $('#txDate').value = tx.date || todayStr();
+    $('#txNotes').value = tx.notes || ''; setSub(tx.type, tx.sub, tx.party);
+
+    const tbody = $('#slipItemsBody');
+    tbody.innerHTML = '';
+
+    const thExpCol = $('#thExpCol');
+    thExpCol.textContent = tl((type === 'out') ? 'الوجبة / الاكسباير' : 'تاريخ الاكسباير');
+
+    if(tx.items && tx.items.length) {
+      tx.items.forEach(item => {
+        const mat = findMaterial(item.materialQuery);
+        const code = mat ? mat.code : item.materialQuery;
+        const name = mat ? mat.name : '';
+        const exp = (item.expiryDate && item.expiryDate !== 'بدون اكسباير') ? item.expiryDate : '';
+        addSlipRow(code, name, item.qty, exp);
+      });
+    } else {
+      addSlipRow();
+    }
+
+    $('#txOverlay').classList.add('open');
+  }
+
+  const btnOpenIn = $('#btnOpenIn');
+  const btnOpenOut = $('#btnOpenOut');
+  if(btnOpenIn) btnOpenIn.onclick = () => openTx('in');
+  if(btnOpenOut) btnOpenOut.onclick = () => openTx('out');
+  
+  const txClose = $('#txClose');
+  const txCancelBtn = $('#txCancelBtn');
+  if(txClose) txClose.onclick = () => { $('#txOverlay').classList.remove('open'); $('#txEditId').value = ''; };
+  if(txCancelBtn) txCancelBtn.onclick = () => { $('#txOverlay').classList.remove('open'); $('#txEditId').value = ''; };
+  
+  const btnAddRow = $('#btnAddRow');
+  if(btnAddRow) btnAddRow.onclick = () => addSlipRow();
+
+  const txForm = $('#txForm');
+  if(txForm) {
+    txForm.onsubmit = (e) => {
+      e.preventDefault();
+      const type = $('#txType').value;
+      const date = $('#txDate').value;
+      const notes = $('#txNotes').value.trim();
+      const sub = SUBS[type] ? $('#txSub').value : '', party = $('#txParty').value.trim();
+      const editId = $('#txEditId').value;
+      const rows = $$('#slipItemsBody tr');
+      let items = [];
+
+      for(let tr of rows) {
+        const codeVal = tr.querySelector('.slip-code-input').value.trim();
+        const nameVal = tr.querySelector('.slip-name-input').value.trim();
+        const qty = Number(tr.querySelector('.slip-qty-input').value);
+        const expiryDate = tr.querySelector('.slip-exp-input').value.trim();
+
+        if(!codeVal && !nameVal) {
+          showToast(tl('يرجى تحديد كود المادة أو اسمها لكل صف'), true);
+          return;
+        }
+
+        const mat = findMaterial(codeVal) || findMaterial(nameVal);
+        if(!mat) {
+          showToast(tl('المادة غير مسجلة أو الكود خاطئ: "{0}"', codeVal || nameVal), true);
+          return;
+        }
+
+        if(type === 'out') {
+          const b = computeBalance(mat.name, editId || undefined);
+          if(qty > b.balance) {
+            showToast(tl('الكمية المطلوبة للمادة ({0}) أكبر من المتاح في المخزن ({1})!', mat.name, b.balance), true);
+            return;
+          }
+        }
+
+        items.push({ materialQuery: mat.code, qty, expiryDate: expiryDate || 'بدون اكسباير' });
+      }
+
+      if(editId) {
+        const idx = transactions.findIndex(x => String(x.id) === String(editId));
+        if(idx > -1) {
+          transactions[idx] = { ...transactions[idx], type, items, date, notes, sub, party, updatedAt: Date.now() };
+        }
+        saveData('transactions', transactions);
+        $('#txOverlay').classList.remove('open');
+        $('#txEditId').value = '';
+        renderAll();
+        showToast(tl('تم تحديث الوصل بنجاح'));
+      } else {
+        const nextSlipId = getNextSlipNumber();
+        transactions.push({ id: nextSlipId, type, items, date, notes, sub, party, createdAt: Date.now() });
+        saveData('transactions', transactions);
+        $('#txOverlay').classList.remove('open');
+        renderAll();
+        showToast(tl('تم تسجيل وإصدار الوصل بنجاح'));
+      }
+    };
+  }
+
+  const settingsForm = $('#settingsForm');
+  if(settingsForm) {
+    settingsForm.onsubmit = (e) => {
+      e.preventDefault();
+      settings.warehouseName = fromDisplayDefault($('#setWarehouseName').value.trim());
+      settings.companyName = fromDisplayDefault($('#setCompanyName').value.trim());
+      settings.address = $('#setWarehouseAddress').value.trim();
+      settings.phone = $('#setWarehousePhone').value.trim();
+      saveData('settings', settings);
+      loadSettings();
+      showToast(tl('تم حفظ إعدادات المخزن بنجاح'));
+    };
+  }
+
+  const dashSearch = $('#dashSearch');
+  const logSearch = $('#logSearch');
+  const logFilterType = $('#logFilterType');
+  const logFilterMonth = $('#logFilterMonth');
+
+  if(dashSearch) dashSearch.oninput = renderDash;
+  const dashCategory = $('#dashCategory');
+  if(dashCategory) dashCategory.onchange = renderDash;
+  if(logSearch) logSearch.oninput = renderLog;
+  if(logFilterType) logFilterType.onchange = renderLog;
+  if(logFilterMonth) logFilterMonth.onchange = renderLog;
+
+  function runBackup() {
+    const str = JSON.stringify({ materials, transactions, settings, customUnits }, null, 2);
+    saveFile(str, `Raw_Materials_Backup_${todayStr()}.json`);
+    showToast(tl('تم تحميل ملف النسخة الاحتياطية'));
+  }
+
+  const btnExportBackup = $('#btnExportBackup');
+  if(btnExportBackup) btnExportBackup.onclick = runBackup;
+
+  const btnImportBackup = $('#btnImportBackup');
+  const fileImportInput = $('#fileImportInput');
+  if(btnImportBackup && fileImportInput) {
+    btnImportBackup.onclick = () => fileImportInput.click();
+    fileImportInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if(!file) return;
+      const r = new FileReader();
+      r.onload = (evt) => {
+        try {
+          const p = JSON.parse(evt.target.result);
+          if(Array.isArray(p.materials) && Array.isArray(p.transactions)) {
+            materials = p.materials;
+            transactions = p.transactions;
+            if(p.settings) settings = p.settings;
+            customUnits = Array.isArray(p.customUnits) ? p.customUnits : [];
+            materials.forEach(m => ensureUnit(m.unit));
+            saveData('customUnits', customUnits);
+            assignMissingMaterialCodes();
+            normalizeCategories();
+            populateUnits();
+            saveData('materials', materials);
+            saveData('transactions', transactions);
+            saveData('settings', settings);
+            loadSettings();
+            
+            let maxId = 0;
+            p.transactions.forEach(t => {
+              let num = Number(t.id);
+              if (!isNaN(num) && num > maxId) maxId = num;
+            });
+            saveData('lastSlipNumber', maxId);
+
+            renderAll();
+            showToast(tl('تم استعادة البيانات بنجاح'));
+          } else { showToast(tl('الملف غير متوافق!'), true); }
+        } catch(err) { showToast(tl('ملف غير صالح!'), true); }
+      };
+      r.readAsText(file);
+      e.target.value = '';
+    };
+  }
+
+  const btnClearYearBtn = $('#btnClearYearBtn');
+  if(btnClearYearBtn) {
+    btnClearYearBtn.onclick = () => {
+      if(materials.length === 0) { showToast(tl('المخزن فارغ مسبقاً!'), true); return; }
+
+      const conf = prompt(tl("أنت تطلب تصفير الحركات وبدء سنة مالية جديدة.\nسيقوم النظام بنقل الجرد الحالي كأرصدة افتتاحية.\n\nلتأكيد التصفير، اكتب كلمة (تصفير):"));
+      const confNorm = (conf || '').trim().toLowerCase();
+      if(confNorm !== 'تصفير' && confNorm !== tl('تصفير').toLowerCase()) { showToast(tl('تم إلغاء التصفير'), true); return; }
+
+      let newTxItems = [];
+      materials.forEach(m => {
+        const b = computeBalance(m.name);
+        Object.keys(b.batches).forEach(exp => {
+          const qty = b.batches[exp];
+          if(qty > 0) {
+            newTxItems.push({
+              materialQuery: m.code,
+              qty: qty,
+              expiryDate: exp
+            });
+          }
+        });
+      });
+
+      const nextInitSlipId = getNextSlipNumber();
+      transactions = [{
+        id: nextInitSlipId,
+        type: 'init',
+        items: newTxItems,
+        date: todayStr(),
+        notes: 'رصيد افتتاحي مرحّل من العام السابق',
+        createdAt: Date.now()
+      }];
+
+      saveData('transactions', transactions);
+      renderAll();
+      const dashTab = $('.wh-tab[data-view="dash"]');
+      if(dashTab) dashTab.click();
+      alert(tl("تم تصفير المخازن ونقل الأرصدة الافتتاحية للسنة الجديدة بنجاح!"));
+    };
+  }
+
+  const btnExportExcel = $('#btnExportExcel');
+  if(btnExportExcel) {
+    btnExportExcel.onclick = async () => {
+      if (materials.length === 0) {
+        showToast(tl('المخزن فارغ، لا توجد بيانات لتصديرها!'), true);
+        return;
+      }
+
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet(tl('جرد المواد الأولية'));
+      worksheet.views = [{ rtl: isRtl() }];
+
+      const thinBorder = { style: 'thin', color: { argb: 'FF999999' } };
+      const fullBorder = { top: thinBorder, left: thinBorder, bottom: thinBorder, right: thinBorder };
+
+      worksheet.mergeCells('A1:H1');
+      worksheet.getCell('A1').value = tl(settings.warehouseName);
+      worksheet.getCell('A1').font = { name: 'Tajawal', size: 24, bold: true, color: { argb: 'FFFFFF' } };
+      worksheet.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '223037' } };
+      worksheet.getCell('A1').alignment = { vertical: 'middle', horizontal: 'center' };
+      worksheet.getRow(1).height = 36;
+
+      worksheet.mergeCells('A2:H2');
+      worksheet.getCell('A2').value = tl('تقرير جرد المواد والكميات الحالية');
+      worksheet.getCell('A2').font = { name: 'Tajawal', size: 13, bold: true, color: { argb: 'B9761C' } };
+      worksheet.getCell('A2').alignment = { vertical: 'middle', horizontal: 'center' };
+
+      worksheet.mergeCells('A3:H3');
+      worksheet.getCell('A3').value = tl('تاريخ الجرد: {0}', todayStr());
+      worksheet.getCell('A3').font = { name: 'Tajawal', size: 12, bold: true, color: { argb: '5B564C' } };
+      worksheet.getCell('A3').alignment = { vertical: 'middle', horizontal: 'center' };
+
+      worksheet.addRow([]);
+      worksheet.addRow(['كود المادة', 'اسم المادة', 'الفئة', 'الكمية الحالية الإجمالية', 'وحدة القياس', 'الحد الأدنى', 'الحالة', 'الوجبات (الاكسباير)'].map(h => tl(h)));
+
+      const headerRow = worksheet.getRow(5);
+      headerRow.eachCell((cell) => {
+        cell.font = { name: 'Tajawal', size: 18, bold: true, color: { argb: 'FFFFFF' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '33454C' } };
+        cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+        cell.border = fullBorder;
+      });
+      headerRow.height = 28;
+
+      const catOrder = { 'مادة أولية': 0, 'مادة جاهزة': 1 };
+      const exportList = materials.slice().sort((a, b2) => (catOrder[a.category] ?? 9) - (catOrder[b2.category] ?? 9));
+      exportList.forEach(m => {
+        const b = computeBalance(m.name);
+        const isLow = m.minStock !== '' && m.minStock !== null && b.balance <= Number(m.minStock);
+        const batchText = Object.keys(b.batches).map(k => `${tl(k)}: ${b.batches[k]}`).join(' | ') || '—';
+        const row = worksheet.addRow([m.code, m.name, tl(m.category || '—'), b.balance, tl(m.unit || 'قطعة'), (m.minStock === '' || m.minStock == null) ? '—' : Number(m.minStock), tl(isLow ? 'تحت الحد الأدنى' : 'جيد'), batchText]);
+        row.height = 24;
+        row.eachCell((cell) => {
+          cell.font = { name: 'Tajawal', size: 18 };
+          cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+          cell.border = fullBorder;
+        });
+
+        const statusCell = row.getCell(7);
+        if(isLow) {
+          statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F6E1DE' } };
+          statusCell.font = { name: 'Tajawal', size: 18, bold: true, color: { argb: 'B0453B' } };
+        } else {
+          statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'E6EFE2' } };
+          statusCell.font = { name: 'Tajawal', size: 18, bold: true, color: { argb: '4C7A51' } };
+        }
+      });
+
+      // ضبط عرض الأعمدة تلقائياً حسب حجم النص في كل خلية، مع حدّين أدنى وأقصى لمنع أن يكون العمود كبيراً جداً أو صغيراً جداً
+      worksheet.columns.forEach(column => {
+        let maxLength = 10;
+        column.eachCell({ includeEmpty: true }, (cell) => {
+          if (cell.value) {
+            const valStr = cell.value.toString();
+            if (valStr.length > maxLength) {
+              maxLength = valStr.length;
+            }
+          }
+        });
+        column.width = Math.max(14, Math.min(maxLength + 6, 40));
+      });
+
+      try {
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        saveFile(blob, `${tl('تقرير_المخزن')}_${todayStr()}.xlsx`);
+        showToast(tl('تم تصدير تقرير Excel بنجاح 📊'));
+      } catch (err) {
+        showToast(tl('حدث خطأ أثناء التصدير!'), true);
+      }
+    };
+  }
+
+  try { const sl = localStorage.getItem(STORAGE_PREFIX + 'lang'); if(LANGS.includes(sl)) lang = sl; } catch(e){}
+  collectStatic();
+  materials.forEach(m => ensureUnit(m.unit));
+  assignMissingMaterialCodes();
+  normalizeCategories();
+  populateUnits();
+  loadSettings();
+  renderAll();
+  startCloud();
+
+  const matUnitSel = $('#matUnit');
+  if(matUnitSel) matUnitSel.onchange = () => {
+    const ni = $('#matNewUnit');
+    const isNew = matUnitSel.value === NEW_UNIT_VALUE;
+    ni.style.display = isNew ? 'block' : 'none';
+    if(isNew) ni.focus();
+  };
+  const matsCatFilter = $('#matsCategoryFilter');
+  if(matsCatFilter) matsCatFilter.onchange = renderMats;
+
+  const langSelect = $('#langSelect');
+  if(langSelect) langSelect.onchange = () => {
+    lang = LANGS.includes(langSelect.value) ? langSelect.value : 'ar';
+    try { localStorage.setItem(STORAGE_PREFIX + 'lang', lang); } catch(e){}
+    applyLanguage();
+  };
+
+  // ===== التقارير =====
+  const repState = { tab: 'mat', code: '', from: '', to: '', days: 60 };
+  const rpIso = d => d.toISOString().slice(0,10);
+  function rpRange(k){ const d = new Date(), p = n => String(n).padStart(2,'0');
+    if (k === 'month') return [d.getFullYear() + '-' + p(d.getMonth()+1) + '-01', rpIso(d)];
+    if (k === '30') return [rpIso(new Date(Date.now() - 30*864e5)), rpIso(d)];
+    if (k === 'year') return [d.getFullYear() + '-01-01', rpIso(d)];
+    return ['', ''];
+  }
+  function rpTable(head, rows){
+    return '<div style="overflow-x:auto"><table class="rp-tbl"><tr>' + head.map(h => `<th>${escapeHtml(tl(h))}</th>`).join('') + '</tr>'
+      + (rows.length ? rows.map(r => '<tr>' + r.map(c => `<td>${escapeHtml(String(c))}</td>`).join('') + '</tr>').join('') : `<tr><td colspan="${head.length}" class="rp-empty">${tl('لا توجد بيانات')}</td></tr>`) + '</table></div>';
+  }
+  function renderReports(){
+    const box = $('#repBox'); if (!box) return; const S = repState;
+    const tabs = [['mat','حركة مادة'],['dead','مواد راكدة'],['party','حسب الجهة']];
+    let h = '<div class="rp-tabs">' + tabs.map(t => `<button type="button" class="rp-tab${S.tab === t[0] ? ' on' : ''}" data-rt="${t[0]}">${tl(t[1])}</button>`).join('') + '</div><div class="rp-card">';
+    let head = [], rows = [], csv = '';
+    const typeName = t => tl(t.type === 'in' ? 'إدخال' : t.type === 'out' ? 'إخراج' : 'افتتاحي') + (t.sub ? ' - ' + tl(t.sub) : '');
+    if (S.tab === 'mat') {
+      h += `<div class="rp-filters"><label>${tl('المادة (اكتب الكود أو الاسم)')}<input id="rpMat" list="rpMatList" value="${escapeHtml(S.code)}"></label><datalist id="rpMatList">${materials.map(m => `<option value="${escapeHtml(m.code)}">${escapeHtml(m.name)}</option>`).join('')}</datalist><label>${tl('من')}<input type="date" id="rpFrom" value="${S.from}"></label><label>${tl('إلى')}<input type="date" id="rpTo" value="${S.to}"></label></div>`
+        + '<div class="rp-chips">' + [['month','هذا الشهر'],['30','آخر 30 يوم'],['year','هذه السنة'],['all','الكل']].map(c => `<button type="button" data-chip="${c[0]}">${tl(c[1])}</button>`).join('') + '</div>';
+      const mat = findMaterial(S.code);
+      if (!mat) h += `<p class="rp-empty">${tl('اختر مادة صحيحة من القائمة')}</p>`;
+      else {
+        let tin = 0, tout = 0; head = ['التاريخ','رقم الوصل','النوع','الجهة','الكمية'];
+        transactions.slice().sort((a,b) => String(a.date).localeCompare(String(b.date))).forEach(t => { if ((S.from && t.date < S.from) || (S.to && t.date > S.to)) return;
+          (t.items || []).forEach(i => { if (i.materialQuery !== mat.code) return; const q = Number(i.qty) || 0; if (t.type === 'out') tout += q; else tin += q;
+            rows.push([t.date, t.id, typeName(t), t.party || '—', (t.type === 'out' ? '-' : '+') + fmtNum(q)]); }); });
+        h += `<div class="rp-sum"><div>${tl('الداخل')}<b style="color:var(--in)">${fmtNum(tin)}</b></div><div>${tl('الخارج')}<b style="color:var(--out)">${fmtNum(tout)}</b></div><div>${tl('الصافي')}<b>${fmtNum(tin - tout)}</b></div></div>`;
+        h += rows.length ? '' : `<p class="rp-empty">${tl('لا توجد حركات في هذه الفترة')}</p>`; csv = mat.code;
+      }
+    } else if (S.tab === 'dead') {
+      h += `<div class="rp-filters"><label>${tl('عدم الحركة لمدة')}<select id="rpDays">${[30,60,90,180].map(d => `<option value="${d}"${S.days === d ? ' selected' : ''}>${d} ${tl('يوم')}</option>`).join('')}</select></label></div>`;
+      const cutoff = rpIso(new Date(Date.now() - S.days*864e5)); head = ['الكود','اسم المادة','آخر حركة','الرصيد'];
+      materials.forEach(m => { let last = ''; transactions.forEach(t => { if ((t.items || []).some(i => i.materialQuery === m.code) && t.date > last) last = t.date; });
+        const bal = computeBalance(m.name).balance; if (bal > 0 && (!last || last < cutoff)) rows.push([m.code, m.name, last || '—', fmtNum(bal)]); });
+      if (!rows.length) h += `<p class="rp-empty">${tl('لا توجد مواد راكدة 👍')}</p>`; csv = 'idle';
+    } else {
+      head = ['الجهة','عدد الوصولات','إجمالي الداخل','إجمالي الخارج']; const P = {};
+      transactions.forEach(t => { if (!t.party) return; const p = P[t.party] = P[t.party] || { in: 0, out: 0, n: 0 }; p.n++; (t.items || []).forEach(i => { p[t.type === 'out' ? 'out' : 'in'] += Number(i.qty) || 0; }); });
+      rows = Object.keys(P).sort((a,b) => P[b].n - P[a].n).map(k => [k, P[k].n, fmtNum(P[k].in), fmtNum(P[k].out)]);
+      if (!rows.length) h += `<p class="rp-empty">${tl('لا توجد حركات بجهات مسجلة')}</p>`; csv = 'parties';
+    }
+    if (rows.length) h += rpTable(head, rows) + `<p style="margin-top:12px"><button type="button" class="rp-csv" id="rpCsv">⬇ ${tl('تنزيل CSV')}</button></p>`;
+    box.innerHTML = h + '</div>';
+    $$('[data-rt]').forEach(b => b.onclick = () => { S.tab = b.dataset.rt; renderReports(); });
+    $$('[data-chip]').forEach(b => b.onclick = () => { [S.from, S.to] = rpRange(b.dataset.chip); renderReports(); });
+    const bind = (id, fn) => { const el = $(id); if (el) el.onchange = () => { fn(el.value); renderReports(); }; };
+    bind('#rpMat', v => S.code = v.trim()); bind('#rpFrom', v => S.from = v); bind('#rpTo', v => S.to = v); bind('#rpDays', v => S.days = Number(v));
+    const c = $('#rpCsv'); if (c) c.onclick = () => { const q = v => '"' + String(v).replace(/"/g, '""') + '"'; saveFile('\ufeff' + [head.map(x => tl(x))].concat(rows).map(r => r.map(q).join(',')).join('\n'), 'report_' + csv + '_' + todayStr() + '.csv'); };
+  }
+  { const rt = $('.wh-tab[data-view="reports"]'); if (rt) rt.addEventListener('click', renderReports); }
+
+  // ===== قراءة الباركود بالكاميرا =====
+  function scanBarcode(input){
+    if (!('BarcodeDetector' in window) || !navigator.mediaDevices) { showToast(tl('المتصفح لا يدعم قراءة الباركود. استخدم Chrome على أندرويد.'), true); return; }
+    const ov = document.createElement('div'); ov.style.cssText = 'position:fixed;inset:0;background:#000;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center';
+    ov.innerHTML = '<video playsinline muted style="width:100%;max-height:80%"></video><button type="button" style="margin:14px;padding:12px 24px;border-radius:8px;border:none;font-size:16px">' + tl('إغلاق') + '</button>';
+    document.body.appendChild(ov);
+    const video = ov.querySelector('video'); let stream, timer;
+    const stop = () => { clearInterval(timer); if (stream) stream.getTracks().forEach(t => t.stop()); ov.remove(); };
+    ov.querySelector('button').onclick = stop;
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }).then(st => { stream = st; video.srcObject = st; video.play();
+      const det = new BarcodeDetector(); timer = setInterval(async () => { try { const r = await det.detect(video); if (r.length) { input.value = r[0].rawValue; ['input','change','blur'].forEach(ev => input.dispatchEvent(new Event(ev, { bubbles: true }))); stop(); } } catch(e){} }, 300); })
+      .catch(() => { showToast(tl('تعذّر فتح الكاميرا'), true); stop(); });
+  }
+  { const body = $('#slipItemsBody'); if (body) new MutationObserver(() => { body.querySelectorAll('.slip-code-input').forEach(inp => { if (inp.dataset.scan) return; inp.dataset.scan = 1;
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = '📷'; b.style.cssText = 'margin-inline-start:4px;border:1px solid #DDD3BC;background:#fff;border-radius:6px;cursor:pointer'; b.onclick = () => scanBarcode(inp); inp.after(b); }); }).observe(body, { childList: true }); }
+
+  // ===== تثبيت على الهاتف =====
+  try { const svg = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#33454C"/><text x="50" y="68" font-size="56" text-anchor="middle">📦</text></svg>');
+    const man = { name: 'نظام إدارة المخزن', short_name: 'المخزن', start_url: location.href.split('#')[0], display: 'standalone', background_color: '#F3EFE4', theme_color: '#33454C', dir: 'rtl', lang: 'ar', icons: [{ src: svg, sizes: 'any', type: 'image/svg+xml' }] };
+    const l = document.createElement('link'); l.rel = 'manifest'; l.href = URL.createObjectURL(new Blob([JSON.stringify(man)], { type: 'application/manifest+json' })); document.head.appendChild(l);
+    ['<meta name="theme-color" content="#33454C">','<meta name="apple-mobile-web-app-capable" content="yes">','<meta name="mobile-web-app-capable" content="yes">'].forEach(h => document.head.insertAdjacentHTML('beforeend', h)); } catch(e){}
+  applyLanguage();
+
+})();
+</script>
+
+</body>
+</html>
