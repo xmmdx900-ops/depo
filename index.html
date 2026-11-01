@@ -743,7 +743,7 @@
     if (r.error) return;
     const d = r.data || [];
     if (!d.length || Date.now() - new Date(d[0].at).getTime() > 7*864e5) { await snapshot(); }
-    if (d.length > 8) await SB.from('backups').delete().in('id', d.slice(8).map(x => x.id));
+    if (d.length > 1) await SB.from('backups').delete().in('id', d.slice(1).map(x => x.id));
   }
   async function renderAudit(){
     const box = $('#auditBox'); box.innerHTML = tl('جارٍ التحميل…');
