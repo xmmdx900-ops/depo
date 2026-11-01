@@ -29,6 +29,7 @@
     #app-root .rp-tbl{width:100%;border-collapse:collapse;font-size:13px;background:#fff}
     #app-root .rp-tbl th{background:var(--steel);color:#fff;padding:9px;text-align:start}
     #app-root .rp-tbl td{padding:8px 9px;border-bottom:1px solid var(--line)}
+    #app-root .rp-link{color:var(--steel);font-weight:700;text-decoration:underline;cursor:pointer}
     #app-root .rp-empty{color:var(--ink-soft);text-align:center;padding:18px}
     #whGate{position:absolute;inset:0;background:rgba(243,239,228,.96);z-index:50;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-weight:700;color:#33454C;font-size:16px;line-height:1.9}
     #whRole{font-size:12px;margin-top:6px;color:#E0992F;font-weight:700}
@@ -558,7 +559,9 @@
    ['المادة (اكتب الكود أو الاسم)','Material (type code or name)','مادە (کۆد یان ناو بنووسە)'],['من','From','لە'],['إلى','To','بۆ'],['هذا الشهر','This month','ئەم مانگە'],['آخر 30 يوم','Last 30 days','دوایین ٣٠ ڕۆژ'],['هذه السنة','This year','ئەمساڵ'],['الكل','All','هەموو'],
    ['الداخل','In','داخڵ'],['الخارج','Out','دەرچوو'],['الصافي','Net','پوختە'],['الجهة المستلمة / المورّد','Party','لایەن'],['عدد الوصولات','Number of slips','ژمارەی وەسڵەکان'],['إجمالي الداخل','Total in','کۆی داخڵ'],['إجمالي الخارج','Total out','کۆی دەرچوو'],
    ['آخر حركة','Last movement','دوایین جووڵە'],['الرصيد','Balance','هاوسەنگی'],['الكود','Code','کۆد'],['عدم الحركة لمدة','No movement for','بێ جووڵە بۆ ماوەی'],['يوم','days','ڕۆژ'],['تنزيل CSV','Download CSV','داگرتنی CSV'],
-   ['اختر مادة صحيحة من القائمة','Choose a valid material from the list','مادەیەکی دروست لە لیستەکە هەڵبژێرە'],['لا توجد حركات في هذه الفترة','No movements in this period','هیچ جووڵەیەک نییە لەم ماوەیەدا'],['لا توجد مواد راكدة 👍','No idle materials 👍','هیچ مادەیەکی ڕاوەستاو نییە 👍'],['لا توجد حركات بجهات مسجلة','No movements with a registered party','هیچ جووڵەیەک نییە بە لایەنی تۆمارکراو']
+   ['اختر مادة صحيحة من القائمة','Choose a valid material from the list','مادەیەکی دروست لە لیستەکە هەڵبژێرە'],['لا توجد حركات في هذه الفترة','No movements in this period','هیچ جووڵەیەک نییە لەم ماوەیەدا'],['لا توجد مواد راكدة 👍','No idle materials 👍','هیچ مادەیەکی ڕاوەستاو نییە 👍'],['لا توجد حركات بجهات مسجلة','No movements with a registered party','هیچ جووڵەیەک نییە بە لایەنی تۆمارکراو'],
+   ['هل تريد حفظ نسخة من البيانات على جهازك قبل الخروج؟','Do you want to save a copy of the data to your device before logging out?','دەتەوێت پێش دەرچوون کۆپییەک لە داتاکان لەسەر ئامێرەکەت پاشەکەوت بکەیت؟'],
+   ['نعم، احفظ نسخة ثم اخرج','Yes, save a copy then log out','بەڵێ، کۆپی پاشەکەوت بکە و دەرچۆ'],['لا، اخرج بدون نسخة','No, log out without a copy','نەخێر، بەبێ کۆپی دەرچۆ'],['إلغاء (البقاء في البرنامج)','Cancel (stay in the program)','هەڵوەشاندنەوە (مانەوە لە بەرنامەکە)']
   ].forEach(r => { I18N[NORM(r[0])] = [r[1], r[2]]; });
 
   let lang = 'ar';
@@ -781,7 +784,22 @@
   function setRoleLabel(){
     const lab = $('#whRole'); if (!lab) return;
     lab.innerHTML = '👤 ' + tl(ROLE === 'manager' ? 'حساب المدير' : ROLE === 'viewer' ? 'حساب مشاهدة' : 'حساب الموظفة') + ' &nbsp; <button id="whLogout" type="button" style="background:none;border:1px solid #E0992F;color:#E0992F;border-radius:6px;padding:2px 10px;cursor:pointer;font-family:inherit">' + tl('خروج') + '</button>';
-    $('#whLogout').onclick = async () => { await SB.auth.signOut(); location.reload(); };
+    $('#whLogout').onclick = () => {
+      const doLogout = async (wait) => { if (wait) await new Promise(r => setTimeout(r, 900)); await SB.auth.signOut(); location.reload(); };
+      if (ROLE === 'viewer') return doLogout(false);
+      const ov = document.createElement('div');
+      ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+      const bs = 'display:block;width:100%;padding:11px;margin-top:8px;border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;';
+      ov.innerHTML = '<div style="background:#fff;border-radius:12px;padding:22px;max-width:360px;width:100%;text-align:center;color:#33454C">'
+        + '<div style="font-weight:700;font-size:16px;line-height:1.7">' + tl('هل تريد حفظ نسخة من البيانات على جهازك قبل الخروج؟') + '</div>'
+        + '<button id="xBk" type="button" style="' + bs + 'border:none;background:#33454C;color:#fff">' + tl('نعم، احفظ نسخة ثم اخرج') + '</button>'
+        + '<button id="xNo" type="button" style="' + bs + 'border:1px solid #DDD3BC;background:#fff;color:#33454C">' + tl('لا، اخرج بدون نسخة') + '</button>'
+        + '<button id="xCa" type="button" style="' + bs + 'border:none;background:none;color:#8a8a8a;font-weight:400">' + tl('إلغاء (البقاء في البرنامج)') + '</button></div>';
+      document.body.appendChild(ov);
+      ov.querySelector('#xBk').onclick = () => { runBackup(); doLogout(true); };
+      ov.querySelector('#xNo').onclick = () => doLogout(false);
+      ov.querySelector('#xCa').onclick = () => ov.remove();
+    };
   }
   async function boot(session){
     if (!session) return loginUI();
@@ -1792,7 +1810,18 @@
   }
   function rpTable(head, rows){
     return '<div style="overflow-x:auto"><table class="rp-tbl"><tr>' + head.map(h => `<th>${escapeHtml(tl(h))}</th>`).join('') + '</tr>'
-      + (rows.length ? rows.map(r => '<tr>' + r.map(c => `<td>${escapeHtml(String(c))}</td>`).join('') + '</tr>').join('') : `<tr><td colspan="${head.length}" class="rp-empty">${tl('لا توجد بيانات')}</td></tr>`) + '</table></div>';
+      + (rows.length ? rows.map(r => '<tr>' + r.map(c => (c && typeof c === 'object') ? `<td><a href="#" class="rp-link" data-slip="${escapeHtml(String(c.link))}">#${escapeHtml(String(c.link))} ↗</a></td>` : `<td>${escapeHtml(String(c))}</td>`).join('') + '</tr>').join('') : `<tr><td colspan="${head.length}" class="rp-empty">${tl('لا توجد بيانات')}</td></tr>`) + '</table></div>';
+  }
+  function gotoSlip(id){
+    $('#logSearch').value = String(id);
+    const m = $('#logFilterMonth'); if (m) m.value = '';
+    const ty = $('#logFilterType'); if (ty) ty.value = '';
+    const tab = $('.wh-tab[data-view="log"]'); if (tab) tab.click();
+    renderLog();
+    setTimeout(() => {
+      const b = document.querySelector('[data-edit-tx="' + String(id).replace(/"/g, '') + '"]'), tr = b && b.closest('tr');
+      if (tr) { tr.scrollIntoView({ behavior: 'smooth', block: 'center' }); tr.style.outline = '3px solid #E0992F'; tr.style.background = '#FFF3D6'; setTimeout(() => { tr.style.outline = ''; tr.style.background = ''; }, 4000); }
+    }, 120);
   }
   function renderReports(){
     const box = $('#repBox'); if (!box) return; const S = repState;
@@ -1809,7 +1838,7 @@
         let tin = 0, tout = 0; head = ['التاريخ','رقم الوصل','النوع','الجهة','الكمية'];
         transactions.slice().sort((a,b) => String(a.date).localeCompare(String(b.date))).forEach(t => { if ((S.from && t.date < S.from) || (S.to && t.date > S.to)) return;
           (t.items || []).forEach(i => { if (i.materialQuery !== mat.code) return; const q = Number(i.qty) || 0; if (t.type === 'out') tout += q; else tin += q;
-            rows.push([t.date, t.id, typeName(t), t.party || '—', (t.type === 'out' ? '-' : '+') + fmtNum(q)]); }); });
+            rows.push([t.date, { link: t.id }, typeName(t), t.party || '—', (t.type === 'out' ? '-' : '+') + fmtNum(q)]); }); });
         h += `<div class="rp-sum"><div>${tl('الداخل')}<b style="color:var(--in)">${fmtNum(tin)}</b></div><div>${tl('الخارج')}<b style="color:var(--out)">${fmtNum(tout)}</b></div><div>${tl('الصافي')}<b>${fmtNum(tin - tout)}</b></div></div>`;
         h += rows.length ? '' : `<p class="rp-empty">${tl('لا توجد حركات في هذه الفترة')}</p>`; csv = mat.code;
       }
@@ -1827,11 +1856,12 @@
     }
     if (rows.length) h += rpTable(head, rows) + `<p style="margin-top:12px"><button type="button" class="rp-csv" id="rpCsv">⬇ ${tl('تنزيل CSV')}</button></p>`;
     box.innerHTML = h + '</div>';
+    $$('[data-slip]').forEach(a => a.onclick = e => { e.preventDefault(); gotoSlip(a.dataset.slip); });
     $$('[data-rt]').forEach(b => b.onclick = () => { S.tab = b.dataset.rt; renderReports(); });
     $$('[data-chip]').forEach(b => b.onclick = () => { [S.from, S.to] = rpRange(b.dataset.chip); renderReports(); });
     const bind = (id, fn) => { const el = $(id); if (el) el.onchange = () => { fn(el.value); renderReports(); }; };
     bind('#rpMat', v => S.code = v.trim()); bind('#rpFrom', v => S.from = v); bind('#rpTo', v => S.to = v); bind('#rpDays', v => S.days = Number(v));
-    const c = $('#rpCsv'); if (c) c.onclick = () => { const q = v => '"' + String(v).replace(/"/g, '""') + '"'; saveFile('\ufeff' + [head.map(x => tl(x))].concat(rows).map(r => r.map(q).join(',')).join('\n'), 'report_' + csv + '_' + todayStr() + '.csv'); };
+    const c = $('#rpCsv'); if (c) c.onclick = () => { const q = v => '"' + String(v && typeof v === 'object' ? v.link : v).replace(/"/g, '""') + '"'; saveFile('\ufeff' + [head.map(x => tl(x))].concat(rows).map(r => r.map(q).join(',')).join('\n'), 'report_' + csv + '_' + todayStr() + '.csv'); };
   }
   { const rt = $('.wh-tab[data-view="reports"]'); if (rt) rt.addEventListener('click', renderReports); }
 
