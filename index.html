@@ -7,30 +7,11 @@
   
   <!-- مكتبات التصدير والتنسيق لملفات Excel -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-  <script>window.supabase || document.write('<script src="https://fastly.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"><\/script>');</script>
-  <script>window.supabase || document.write('<script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"><\/script>');</script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
   <style>
-    #app-root.role-emp [data-del-tx], #app-root.role-emp [data-del-mat], #app-root.role-emp .wh-tab[data-view="settings"], #app-root.role-emp .wh-tab[data-view="audit"], #app-root.role-view .wh-actions, #app-root.role-view .wh-backup-row, #app-root.role-emp #btnImportBackup { display:none !important; }
-    #app-root .rp-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-    #app-root .rp-tab{flex:1;min-width:110px;padding:11px;border:1px solid var(--line);background:var(--bg);border-radius:10px;font-family:inherit;font-weight:700;cursor:pointer;color:var(--ink-soft)}
-    #app-root .rp-tab.on{background:var(--steel);color:#fff;border-color:var(--steel)}
-    #app-root .rp-card{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:16px}
-    #app-root .rp-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:10px}
-    #app-root .rp-filters label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--ink-soft);font-weight:700}
-    #app-root .rp-filters input,#app-root .rp-filters select{padding:9px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:14px;background:#fff}
-    #app-root .rp-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-    #app-root .rp-chips button,#app-root .rp-csv{padding:6px 12px;border:1px solid var(--line);background:#fff;border-radius:999px;cursor:pointer;font-family:inherit;font-size:12.5px}
-    #app-root .rp-sum{display:flex;gap:10px;margin:6px 0 14px;flex-wrap:wrap}
-    #app-root .rp-sum div{flex:1;min-width:110px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center;font-size:12.5px;color:var(--ink-soft)}
-    #app-root .rp-sum b{display:block;font-size:22px}
-    #app-root .rp-tbl{width:100%;border-collapse:collapse;font-size:13px;background:#fff}
-    #app-root .rp-tbl th{background:var(--steel);color:#fff;padding:9px;text-align:start}
-    #app-root .rp-tbl td{padding:8px 9px;border-bottom:1px solid var(--line)}
-    #app-root .rp-link{color:var(--steel);font-weight:700;text-decoration:underline;cursor:pointer}
-    #app-root .rp-empty{color:var(--ink-soft);text-align:center;padding:18px}
+    #app-root.role-emp [data-del-tx], #app-root.role-emp [data-del-mat], #app-root.role-emp .wh-tab[data-view="settings"], #app-root.role-emp #btnImportBackup { display:none !important; }
     #whGate{position:absolute;inset:0;background:rgba(243,239,228,.96);z-index:50;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-weight:700;color:#33454C;font-size:16px;line-height:1.9}
     #whRole{font-size:12px;margin-top:6px;color:#E0992F;font-weight:700}
 
@@ -300,8 +281,6 @@
     <button class="wh-tab" data-view="log" type="button">سجل الحركات</button>
     <button class="wh-tab" data-view="mats" type="button">بيانات المواد والأكواد</button>
     <button class="wh-tab" data-view="settings" type="button">إعدادات المخزن والشركة</button>
-    <button class="wh-tab" data-view="reports" type="button">التقارير</button>
-    <button class="wh-tab" data-view="audit" type="button">سجل التعديلات والنسخ</button>
   </div>
 
   <div class="wh-body">
@@ -371,6 +350,21 @@
           <select class="wh-select" id="matUnit"></select>
           <input class="wh-input" id="matNewUnit" placeholder="اكتب الوحدة الجديدة..." style="display:none; margin-top:6px;">
         </div>
+        <div class="wh-field full">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="matHasUnit2" style="width:auto;margin:0;"> <span>إضافة وحدة ثانية مرتبطة بالوحدة الأساسية</span></label>
+          <div id="matUnit2Box" style="display:none; margin-top:8px; padding:12px; border:1px dashed var(--line); border-radius:10px; background:var(--bg);">
+            <label>الوحدة الثانية</label>
+            <select class="wh-select" id="matUnit2"></select>
+            <input class="wh-input" id="matNewUnit2" placeholder="اكتب الوحدة الجديدة..." style="display:none; margin-top:6px;">
+            <div style="margin-top:10px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-weight:700;">
+              <span>1</span><span id="matBaseLbl" style="color:var(--amber-dark)">—</span>
+              <span>=</span>
+              <input class="wh-input" type="number" min="0" step="any" id="matFactor" style="width:120px;" placeholder="20">
+              <span id="matUnit2Lbl" style="color:var(--amber-dark)">—</span>
+            </div>
+            <div style="font-size:12px; color:var(--ink-soft); margin-top:6px;">اكتب كم تساوي الوحدة الأساسية الواحدة بالوحدة الثانية (مثال: 1 كغم = 20 متر).</div>
+          </div>
+        </div>
         <div class="wh-field"><label>الحد الأدنى للمخزون</label><input class="wh-input" type="number" min="0" id="matMinStock"></div>
         <div class="wh-field full"><label>ملاحظات عامة</label><input class="wh-input" id="matNotes"></div>
         <div class="wh-form-actions">
@@ -390,8 +384,6 @@
     </div>
     
     <!-- إعدادات المخزن والشركة -->
-    <div id="view-reports" class="wh-view"><div id="repBox"></div></div>
-    <div id="view-audit" class="wh-view"><div id="auditBox"></div></div>
     <div id="view-settings" class="wh-view">
       <p class="wh-section-title">⚙️ إعدادات اسم المخزن ومعلومات المنشأة</p>
       <div class="wh-settings-box">
@@ -436,8 +428,6 @@
         <div style="display:flex; gap:10px; margin-bottom:12px;">
           <div class="wh-field" style="flex:1;"><label>تاريخ الحركة *</label><input type="date" id="txDate" required></div>
           <div class="wh-field" style="flex:2;"><label>ملاحظات عامة للوصل *</label><input id="txNotes" required placeholder="سبب الإدخال أو الإخراج..."></div>
-          <div class="wh-field" style="flex:1;"><label>نوع / سبب الحركة</label><select id="txSub"></select></div>
-          <div class="wh-field" style="flex:1;"><label id="lblParty">الجهة</label><input id="txParty" placeholder="مورّد / جهة مستلمة"></div>
         </div>
 
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -499,6 +489,41 @@
 
   function allUnits() { return DEFAULT_UNITS.concat(customUnits); }
 
+  // ===== الوحدة الثانية: الكميات تُخزَّن دائماً بالوحدة الأساسية، والوحدة الثانية للإدخال والعرض فقط =====
+  function r6(n){ return Math.round(Number(n) * 1e6) / 1e6; }
+  function hasU2(m){ return !!(m && m.unit2 && Number(m.factor) > 0); }
+  function toBase(m, qty, unit){ return (hasU2(m) && unit === m.unit2) ? r6(Number(qty) / Number(m.factor)) : Number(qty); }
+  function fromBase(m, qty){ return r6(Number(qty) * Number(m.factor)); }
+  function u2Text(m, qty){ return hasU2(m) ? ` (= ${fmtNum(fromBase(m, qty))} ${escapeHtml(tl(m.unit2))})` : ''; }
+
+  function populateUnit2(selected) {
+    const sel = $('#matUnit2'); if(!sel) return;
+    const ni = $('#matNewUnit2');
+    const cur = (selected !== undefined && selected !== null) ? selected : sel.value;
+    const newTxt = ni ? ni.value : '';
+    sel.innerHTML = allUnits().map(u => `<option value="${escapeHtml(u)}">${escapeHtml(tl(u))}</option>`).join('')
+      + `<option value="${NEW_UNIT_VALUE}">${escapeHtml(tl('＋ إضافة وحدة جديدة...'))}</option>`;
+    const ok = cur === NEW_UNIT_VALUE || allUnits().includes(cur);
+    sel.value = ok ? cur : (allUnits().find(u => u !== $('#matUnit').value) || DEFAULT_UNITS[0]);
+    if(ni) { ni.value = sel.value === NEW_UNIT_VALUE ? newTxt : ''; ni.style.display = sel.value === NEW_UNIT_VALUE ? 'block' : 'none'; }
+    updateUnit2Box();
+  }
+  function selectedUnit1() {
+    const v = $('#matUnit').value;
+    return v === NEW_UNIT_VALUE ? ($('#matNewUnit').value.trim() || '—') : v;
+  }
+  function selectedUnit2() {
+    const v = $('#matUnit2').value;
+    return v === NEW_UNIT_VALUE ? ($('#matNewUnit2').value.trim() || '—') : v;
+  }
+  function updateUnit2Box() {
+    const cb = $('#matHasUnit2'), box = $('#matUnit2Box');
+    if(!cb || !box) return;
+    box.style.display = cb.checked ? 'block' : 'none';
+    $('#matBaseLbl').textContent = tl(selectedUnit1());
+    $('#matUnit2Lbl').textContent = tl(selectedUnit2());
+  }
+
   function ensureUnit(u) {
     u = (u||'').trim();
     if(!u || allUnits().includes(u)) return;
@@ -514,6 +539,7 @@
     sel.value = (selected && allUnits().includes(selected)) ? selected : DEFAULT_UNITS[0];
     const ni = $('#matNewUnit');
     if(ni) { ni.value = ''; ni.style.display = 'none'; }
+    populateUnit2();
   }
 
   // تحويل الفئات القديمة (نص حر) إلى الفئتين المعتمدتين مع الحفاظ على النص القديم في الملاحظات
@@ -536,34 +562,9 @@
   // ===== اللغات: العربية / الكردية (سوراني) / الإنجليزية =====
   const LANGS = ['ar','ckb','en'];
   const NORM = (x) => String(x).replace(/[\u064B-\u0652\uFE0F]/g, '');
-  const I18N_RAW = {"نظام إدارة مخزن المواد الأولية": ["Raw Materials Warehouse Management System", "سیستەمی بەڕێوەبردنی کۆگای مادە خاوەکان"], "نظام إدارة المخزون": ["Inventory Management System", "سیستەمی بەڕێوەبردنی کۆگا"], "مخزن المواد الأولية": ["Raw Materials Warehouse", "کۆگای مادە خاوەکان"], "↧ إدخال": ["↧ In", "↧ داخڵکردن"], "↥ إخراج": ["↥ Out", "↥ دەرکردن"], "⬇ حفظ نسخة على جهازي": ["⬇ Save a backup to my device", "⬇ پاشەکەوتکردنی کۆپییەک لەسەر ئامێرەکەم"], "⬆ استرجاع نسخة من جهازي": ["⬆ Restore a backup from my device", "⬆ گەڕاندنەوەی کۆپییەک لە ئامێرەکەمەوە"], "تُحفظ بياناتك تلقائياً داخل هذا المتصفح على هذا الجهاز.": ["Your data is saved automatically inside this browser on this device.", "داتاکانت بە شێوەی خۆکار لەم وێبگەڕە و لەم ئامێرەدا پاشەکەوت دەکرێن."], "لوحة الجرد": ["Inventory Dashboard", "تەختەی جەرد"], "سجل الحركات": ["Transaction Log", "تۆماری جووڵەکان"], "بيانات المواد والأكواد": ["Materials & Codes", "زانیاری مادە و کۆدەکان"], "إعدادات المخزن والشركة": ["Warehouse & Company Settings", "ڕێکخستنەکانی کۆگا و کۆمپانیا"], "⚠️ تنبيه: المواد الأولية التالية متبقٍّ على انتهاء صلاحيتها شهر واحد أو أقل!": ["⚠️ Warning: the following materials expire within one month or less!", "⚠️ ئاگاداری: ئەم مادانەی خوارەوە یەک مانگ یان کەمتریان ماوە بۆ بەسەرچوونیان!"], "تنبيه: المواد الأولية التالية وصلت للحد الأدنى من المخزون أو أقل!": ["Warning: the following materials have reached the minimum stock level or lower!", "ئاگاداری: ئەم مادانەی خوارەوە گەیشتوونەتە کەمترین ڕادەی کۆگا یان کەمترن!"], "عدد المواد المسجّلة": ["Registered materials", "ژمارەی مادە تۆمارکراوەکان"], "إجمالي الحركات الكلية": ["Total transactions", "کۆی گشتی جووڵەکان"], "مواد تحت الحد الأدنى": ["Materials below minimum", "مادەکانی خوار کەمترین ڕادە"], "ابحث بالكود أو اسم المادة...": ["Search by code or material name...", "بگەڕێ بە کۆد یان ناوی مادە..."], "كل الفئات": ["All categories", "هەموو پۆلەکان"], "مادة أولية": ["Raw material", "مادەی خاو"], "مادة جاهزة": ["Finished material", "مادەی ئامادە"], "⬇ تصدير التقرير Excel": ["⬇ Export report to Excel", "⬇ هەناردەکردنی ڕاپۆرت بۆ Excel"], "ابحث برقم الوصل، الكود، اسم المادة، أو التاريخ...": ["Search by slip number, code, material name, or date...", "بگەڕێ بە ژمارەی وەسڵ، کۆد، ناوی مادە، یان بەروار..."], "كل الأنواع": ["All types", "هەموو جۆرەکان"], "إدخال مواد": ["Materials in", "داخڵکردنی مادە"], "إخراج مواد": ["Materials out", "دەرکردنی مادە"], "رصيد افتتاحي": ["Opening balance", "هاوسەنگی سەرەتایی"], "كل الأشهر": ["All months", "هەموو مانگەکان"], "إضافة / تعديل مادة أولية مع كود الصنف": ["Add / edit a material with item code", "زیادکردن / دەستکاریکردنی مادە لەگەڵ کۆدی جۆر"], "كود المادة (Barcode / Code) *": ["Material code (Barcode / Code) *", "کۆدی مادە (Barcode / Code) *"], "اسم المادة الأولية *": ["Material name *", "ناوی مادە *"], "الفئة": ["Category", "پۆل"], "وحدة القياس": ["Unit of measure", "یەکەی پێوان"], "الحد الأدنى للمخزون": ["Minimum stock level", "کەمترین ڕادەی کۆگا"], "ملاحظات عامة": ["General notes", "تێبینی گشتی"], "مثال: MAT-001": ["Example: MAT-001", "نموونە: MAT-001"], "اسم المادة...": ["Material name...", "ناوی مادە..."], "اكتب الوحدة الجديدة...": ["Type the new unit...", "یەکەی نوێ بنووسە..."], "＋ إضافة وحدة جديدة...": ["＋ Add new unit...", "＋ زیادکردنی یەکەی نوێ..."], "حفظ المادة": ["Save material", "پاشەکەوتکردنی مادە"], "تحديث المادة": ["Update material", "نوێکردنەوەی مادە"], "إلغاء التعديل": ["Cancel editing", "هەڵوەشاندنەوەی دەستکاری"], "قائمة المواد المسجلة": ["Registered materials list", "لیستی مادە تۆمارکراوەکان"], "⚙️ إعدادات اسم المخزن ومعلومات المنشأة": ["⚙️ Warehouse name and facility information", "⚙️ ڕێکخستنەکانی ناوی کۆگا و زانیاری دامەزراوە"], "اسم المخزن أو المعمل *": ["Warehouse or factory name *", "ناوی کۆگا یان کارگە *"], "اسم الشركة / المؤسسة": ["Company / organization name", "ناوی کۆمپانیا / دامەزراوە"], "عنوان الموقع": ["Location address", "ناونیشانی شوێن"], "رقم الهاتف / التواصل": ["Phone / contact number", "ژمارەی تەلەفۆن / پەیوەندی"], "حفظ الإعدادات العامة": ["Save general settings", "پاشەکەوتکردنی ڕێکخستنە گشتییەکان"], "♻️ تصفير وإغلاق السنة المخزنية": ["♻️ Reset and close the inventory year", "♻️ سفرکردنەوە و داخستنی ساڵی کۆگا"], "إغلاق السنة ونقل الأرصدة الافتتاحية": ["Close the year and carry over opening balances", "داخستنی ساڵ و گواستنەوەی هاوسەنگییە سەرەتاییەکان"], "يقوم النظام بحذف سجل الحركات الحالي بالكامل لتسريع البرنامج، مع نقل جرد المواد الحالي وكمياتها لتصبح هي الرصيد الافتتاحي للعام الجديد.": ["The system deletes the entire current transaction log to speed up the program, and carries over the current inventory and quantities to become the opening balance of the new year.", "سیستەمەکە تۆماری جووڵەکانی ئێستا بە تەواوی دەسڕێتەوە بۆ خێراکردنی بەرنامەکە، و جەردی ئێستای مادەکان و بڕەکانیان دەگوازێتەوە بۆ ئەوەی ببێتە هاوسەنگی سەرەتایی ساڵی نوێ."], "تصفير وبدء سنة جديدة": ["Reset and start a new year", "سفرکردنەوە و دەستپێکردنی ساڵێکی نوێ"], "إذن حركة مواد": ["Material movement slip", "وەسڵی جووڵەی مادە"], "تاريخ الحركة *": ["Transaction date *", "بەرواری جووڵە *"], "ملاحظات عامة للوصل *": ["General notes for the slip *", "تێبینی گشتی بۆ وەسڵ *"], "سبب الإدخال أو الإخراج...": ["Reason for in or out...", "هۆکاری داخڵکردن یان دەرکردن..."], "المواد المشمولة في هذا الوصل:": ["Materials included in this slip:", "ئەو مادانەی لەم وەسڵەدا هەن:"], "+ إضافة مادة للوصل": ["+ Add material to slip", "+ زیادکردنی مادە بۆ وەسڵ"], "كود المادة": ["Material code", "کۆدی مادە"], "اسم المادة": ["Material name", "ناوی مادە"], "الكمية": ["Quantity", "بڕ"], "الاكسباير": ["Expiry", "بەسەرچوون"], "حذف": ["Delete", "سڕینەوە"], "اعتماد وحفظ الوصل": ["Approve and save slip", "پەسەندکردن و پاشەکەوتکردنی وەسڵ"], "إلغاء": ["Cancel", "هەڵوەشاندنەوە"], "كود المادة...": ["Material code...", "کۆدی مادە..."], "تاريخ الاكسباير": ["Expiry date", "بەرواری بەسەرچوون"], "الوجبة / الاكسباير": ["Batch / Expiry", "بەتش / بەسەرچوون"], "بدون اكسباير": ["No expiry", "بێ بەرواری بەسەرچوون"], "إذن إدخال مواد أولية": ["Materials In Slip", "وەسڵی داخڵکردنی مادە"], "إذن إخراج مواد أولية": ["Materials Out Slip", "وەسڵی دەرکردنی مادە"], "تعديل إذن إدخال مواد أولية": ["Edit Materials In Slip", "دەستکاریکردنی وەسڵی داخڵکردنی مادە"], "تعديل إذن إخراج مواد أولية": ["Edit Materials Out Slip", "دەستکاریکردنی وەسڵی دەرکردنی مادە"], "تعديل رصيد افتتاحي": ["Edit opening balance", "دەستکاریکردنی هاوسەنگی سەرەتایی"], "رصيد افتتاحي مرحّل": ["Carried-over opening balance", "هاوسەنگی سەرەتایی گوازراوە"], "رصيد افتتاحي مرحّل من العام السابق": ["Opening balance carried over from the previous year", "هاوسەنگی سەرەتایی گوازراوە لە ساڵی ڕابردوو"], "الحالة": ["Status", "دۆخ"], "الوحدة": ["Unit", "یەکە"], "الكمية الحالية الإجمالية": ["Total current quantity", "کۆی بڕی ئێستا"], "اسم المادة الأولية": ["Material name", "ناوی مادە"], "الحد الأدنى": ["Minimum", "کەمترین ڕادە"], "إجراء": ["Action", "کردار"], "تحت الحد الأدنى": ["Below minimum", "خوار کەمترین ڕادە"], "جيد": ["Good", "باش"], "لا توجد مواد أولية تطابق بحثك.": ["No materials match your search.", "هیچ مادەیەک نییە لەگەڵ گەڕانەکەت بگونجێت."], "(المتبقي: {0} / الحد: {1})": ["(Remaining: {0} / Limit: {1})", "(ماوە: {0} / کەمترین ڕادە: {1})"], "(وجبة: {0} | متبقي: {1} يوم)": ["(Batch: {0} | {1} days left)", "(بەتش: {0} | {1} ڕۆژ ماوە)"], "(وجبة: {0} | منتهية الصلاحية!)": ["(Batch: {0} | Expired!)", "(بەتش: {0} | بەسەرچووە!)"], "الوجبات:": ["Batches:", "بەتشەکان:"], "لا توجد وجبات نشطة": ["No active batches", "هیچ بەتشێکی چالاک نییە"], "(متاح: {0})": ["(Available: {0})", "(بەردەست: {0})"], "سجل الحركات فارغ لهذا التحديد.": ["The transaction log is empty for this selection.", "تۆماری جووڵەکان بۆ ئەم هەڵبژاردنە بەتاڵە."], "رقم الوصل": ["Slip No.", "ژمارەی وەسڵ"], "التاريخ": ["Date", "بەروار"], "النوع": ["Type", "جۆر"], "المواد والكميات": ["Materials & quantities", "مادە و بڕەکان"], "ملاحظات الوصل": ["Slip notes", "تێبینییەکانی وەسڵ"], "اكسباير:": ["Expiry:", "بەسەرچوون:"], "إدخال": ["In", "داخڵکردن"], "افتتاحي": ["Opening", "سەرەتایی"], "إخراج": ["Out", "دەرکردن"], "تعديل الحركة": ["Edit transaction", "دەستکاریکردنی جووڵە"], "طباعة الوصل": ["Print slip", "چاپکردنی وەسڵ"], "لا توجد مواد أولية مسجلة.": ["No materials registered.", "هیچ مادەیەک تۆمار نەکراوە."], "لا توجد مواد مسجلة.": ["No materials registered.", "هیچ مادەیەک تۆمار نەکراوە."], "حذف هذا الوصل بالكامل؟": ["Delete this slip entirely?", "ئەم وەسڵە بە تەواوی بسڕدرێتەوە؟"], "حذف المادة الأولية؟": ["Delete this material?", "مادەکە بسڕدرێتەوە؟"], "تم الحذف بنجاح": ["Deleted successfully", "بە سەرکەوتوویی سڕایەوە"], "تم الحذف": ["Deleted", "سڕایەوە"], "كود المادة مستخدم مسبقاً!": ["This material code is already in use!", "کۆدی مادە پێشتر بەکارهاتووە!"], "تم الحفظ بنجاح": ["Saved successfully", "بە سەرکەوتوویی پاشەکەوت کرا"], "اكتب اسم الوحدة الجديدة أولاً": ["Type the new unit name first", "سەرەتا ناوی یەکەی نوێ بنووسە"], "يجب أن يحتوي الوصل على مادة واحدة على الأقل": ["The slip must contain at least one material", "پێویستە وەسڵەکە لانیکەم یەک مادەی تێدا بێت"], "يرجى تحديد كود المادة أو اسمها لكل صف": ["Please specify the material code or name for every row", "تکایە کۆد یان ناوی مادە بۆ هەر ڕیزێک دیاری بکە"], "المادة غير مسجلة أو الكود خاطئ: \"{0}\"": ["Material not registered or wrong code: \"{0}\"", "مادەکە تۆمار نەکراوە یان کۆدەکە هەڵەیە: \"{0}\""], "الكمية المطلوبة للمادة ({0}) أكبر من المتاح في المخزن ({1})!": ["The requested quantity for ({0}) exceeds the available stock ({1})!", "بڕی داواکراو بۆ مادەی ({0}) زیاترە لەوەی لە کۆگادا هەیە ({1})!"], "تم تحديث الوصل بنجاح": ["Slip updated successfully", "وەسڵەکە بە سەرکەوتوویی نوێکرایەوە"], "تم تسجيل وإصدار الوصل بنجاح": ["Slip recorded and issued successfully", "وەسڵەکە بە سەرکەوتوویی تۆمار کرا و دەرچوو"], "تم حفظ إعدادات المخزن بنجاح": ["Warehouse settings saved successfully", "ڕێکخستنەکانی کۆگا بە سەرکەوتوویی پاشەکەوت کران"], "تم تحميل ملف النسخة الاحتياطية": ["Backup file downloaded", "فایلی کۆپی پاشەکەوت داگیرا"], "تم استعادة البيانات بنجاح": ["Data restored successfully", "داتاکان بە سەرکەوتوویی گەڕێندرانەوە"], "الملف غير متوافق!": ["Incompatible file!", "فایلەکە گونجاو نییە!"], "ملف غير صالح!": ["Invalid file!", "فایلێکی نادروستە!"], "تم إلغاء التصفير": ["Reset cancelled", "سفرکردنەوە هەڵوەشێندرایەوە"], "المخزن فارغ مسبقاً!": ["The warehouse is already empty!", "کۆگا پێشتر بەتاڵە!"], "المخزن فارغ، لا توجد بيانات لتصديرها!": ["The warehouse is empty, no data to export!", "کۆگا بەتاڵە، هیچ داتایەک نییە بۆ هەناردەکردن!"], "تم تصدير تقرير Excel بنجاح 📊": ["Excel report exported successfully 📊", "ڕاپۆرتی Excel بە سەرکەوتوویی هەناردە کرا 📊"], "حدث خطأ أثناء التصدير!": ["An error occurred during export!", "هەڵەیەک ڕوویدا لە کاتی هەناردەکردندا!"], "تصفير": ["RESET", "سفرکردنەوە"], "أنت تطلب تصفير الحركات وبدء سنة مالية جديدة.\nسيقوم النظام بنقل الجرد الحالي كأرصدة افتتاحية.\n\nلتأكيد التصفير، اكتب كلمة (تصفير):": ["You are requesting to reset all transactions and start a new financial year.\nThe system will carry the current inventory over as opening balances.\n\nTo confirm, type the word (RESET):", "داوای سفرکردنەوەی جووڵەکان و دەستپێکردنی ساڵێکی دارایی نوێ دەکەیت.\nسیستەمەکە جەردی ئێستا دەگوازێتەوە وەک هاوسەنگی سەرەتایی.\n\nبۆ دڵنیابوونەوە لە سفرکردنەوە، ووشەی (سفرکردنەوە) بنووسە:"], "تم تصفير المخازن ونقل الأرصدة الافتتاحية للسنة الجديدة بنجاح!": ["The warehouse was reset and opening balances were carried over to the new year successfully!", "کۆگاکان سفر کرانەوە و هاوسەنگییە سەرەتاییەکان بۆ ساڵی نوێ بە سەرکەوتوویی گوازرانەوە!"], "إذن مخزني - رقم": ["Warehouse slip - No.", "وەسڵی کۆگا - ژمارە"], "العنوان: ": ["Address: ", "ناونیشان: "], "هاتف: ": ["Phone: ", "تەلەفۆن: "], "رقم الوصل:": ["Slip No.:", "ژمارەی وەسڵ:"], "تاريخ الحركة:": ["Transaction date:", "بەرواری جووڵە:"], "م": ["#", "ژ"], "كود الصنف": ["Item code", "کۆدی جۆر"], "ملاحظات الوصل:": ["Slip notes:", "تێبینییەکانی وەسڵ:"], "لا توجد ملاحظات": ["No notes", "هیچ تێبینییەک نییە"], "أمين المخزن": ["Storekeeper", "کۆگادار"], "المستلم / المعتمد": ["Receiver / Approver", "وەرگر / پەسەندکەر"], "جرد المواد الأولية": ["Materials Inventory", "جەردی مادەکان"], "تقرير جرد المواد والكميات الحالية": ["Materials and current quantities inventory report", "ڕاپۆرتی جەردی مادە و بڕە ئێستاکان"], "تاريخ الجرد: {0}": ["Inventory date: {0}", "بەرواری جەرد: {0}"], "الوجبات (الاكسباير)": ["Batches (Expiry)", "بەتشەکان (بەسەرچوون)"], "تقرير_المخزن": ["Warehouse_Report", "ڕاپۆرتی_کۆگا"], "قطعة": ["Piece", "دانە"], "كرتون": ["Carton", "کارتۆن"], "برميل": ["Barrel", "بەرمیل"], "كغم": ["Kg", "کگم"], "لتر": ["Liter", "لیتر"], "متر": ["Meter", "مەتر"]};
+  const I18N_RAW = {"نظام إدارة مخزن المواد الأولية": ["Raw Materials Warehouse Management System", "سیستەمی بەڕێوەبردنی کۆگای مادە خاوەکان"], "نظام إدارة المخزون": ["Inventory Management System", "سیستەمی بەڕێوەبردنی کۆگا"], "مخزن المواد الأولية": ["Raw Materials Warehouse", "کۆگای مادە خاوەکان"], "↧ إدخال": ["↧ In", "↧ داخڵکردن"], "↥ إخراج": ["↥ Out", "↥ دەرکردن"], "⬇ حفظ نسخة على جهازي": ["⬇ Save a backup to my device", "⬇ پاشەکەوتکردنی کۆپییەک لەسەر ئامێرەکەم"], "⬆ استرجاع نسخة من جهازي": ["⬆ Restore a backup from my device", "⬆ گەڕاندنەوەی کۆپییەک لە ئامێرەکەمەوە"], "تُحفظ بياناتك تلقائياً داخل هذا المتصفح على هذا الجهاز.": ["Your data is saved automatically inside this browser on this device.", "داتاکانت بە شێوەی خۆکار لەم وێبگەڕە و لەم ئامێرەدا پاشەکەوت دەکرێن."], "لوحة الجرد": ["Inventory Dashboard", "تەختەی جەرد"], "سجل الحركات": ["Transaction Log", "تۆماری جووڵەکان"], "بيانات المواد والأكواد": ["Materials & Codes", "زانیاری مادە و کۆدەکان"], "إعدادات المخزن والشركة": ["Warehouse & Company Settings", "ڕێکخستنەکانی کۆگا و کۆمپانیا"], "⚠️ تنبيه: المواد الأولية التالية متبقٍّ على انتهاء صلاحيتها شهر واحد أو أقل!": ["⚠️ Warning: the following materials expire within one month or less!", "⚠️ ئاگاداری: ئەم مادانەی خوارەوە یەک مانگ یان کەمتریان ماوە بۆ بەسەرچوونیان!"], "تنبيه: المواد الأولية التالية وصلت للحد الأدنى من المخزون أو أقل!": ["Warning: the following materials have reached the minimum stock level or lower!", "ئاگاداری: ئەم مادانەی خوارەوە گەیشتوونەتە کەمترین ڕادەی کۆگا یان کەمترن!"], "عدد المواد المسجّلة": ["Registered materials", "ژمارەی مادە تۆمارکراوەکان"], "إجمالي الحركات الكلية": ["Total transactions", "کۆی گشتی جووڵەکان"], "مواد تحت الحد الأدنى": ["Materials below minimum", "مادەکانی خوار کەمترین ڕادە"], "ابحث بالكود أو اسم المادة...": ["Search by code or material name...", "بگەڕێ بە کۆد یان ناوی مادە..."], "كل الفئات": ["All categories", "هەموو پۆلەکان"], "مادة أولية": ["Raw material", "مادەی خاو"], "مادة جاهزة": ["Finished material", "مادەی ئامادە"], "⬇ تصدير التقرير Excel": ["⬇ Export report to Excel", "⬇ هەناردەکردنی ڕاپۆرت بۆ Excel"], "ابحث برقم الوصل، الكود، اسم المادة، أو التاريخ...": ["Search by slip number, code, material name, or date...", "بگەڕێ بە ژمارەی وەسڵ، کۆد، ناوی مادە، یان بەروار..."], "كل الأنواع": ["All types", "هەموو جۆرەکان"], "إدخال مواد": ["Materials in", "داخڵکردنی مادە"], "إخراج مواد": ["Materials out", "دەرکردنی مادە"], "رصيد افتتاحي": ["Opening balance", "هاوسەنگی سەرەتایی"], "كل الأشهر": ["All months", "هەموو مانگەکان"], "إضافة / تعديل مادة أولية مع كود الصنف": ["Add / edit a material with item code", "زیادکردن / دەستکاریکردنی مادە لەگەڵ کۆدی جۆر"], "كود المادة (Barcode / Code) *": ["Material code (Barcode / Code) *", "کۆدی مادە (Barcode / Code) *"], "اسم المادة الأولية *": ["Material name *", "ناوی مادە *"], "الفئة": ["Category", "پۆل"], "وحدة القياس": ["Unit of measure", "یەکەی پێوان"], "الحد الأدنى للمخزون": ["Minimum stock level", "کەمترین ڕادەی کۆگا"], "ملاحظات عامة": ["General notes", "تێبینی گشتی"], "مثال: MAT-001": ["Example: MAT-001", "نموونە: MAT-001"], "اسم المادة...": ["Material name...", "ناوی مادە..."], "اكتب الوحدة الجديدة...": ["Type the new unit...", "یەکەی نوێ بنووسە..."], "＋ إضافة وحدة جديدة...": ["＋ Add new unit...", "＋ زیادکردنی یەکەی نوێ..."], "حفظ المادة": ["Save material", "پاشەکەوتکردنی مادە"], "تحديث المادة": ["Update material", "نوێکردنەوەی مادە"], "إلغاء التعديل": ["Cancel editing", "هەڵوەشاندنەوەی دەستکاری"], "قائمة المواد المسجلة": ["Registered materials list", "لیستی مادە تۆمارکراوەکان"], "⚙️ إعدادات اسم المخزن ومعلومات المنشأة": ["⚙️ Warehouse name and facility information", "⚙️ ڕێکخستنەکانی ناوی کۆگا و زانیاری دامەزراوە"], "اسم المخزن أو المعمل *": ["Warehouse or factory name *", "ناوی کۆگا یان کارگە *"], "اسم الشركة / المؤسسة": ["Company / organization name", "ناوی کۆمپانیا / دامەزراوە"], "عنوان الموقع": ["Location address", "ناونیشانی شوێن"], "رقم الهاتف / التواصل": ["Phone / contact number", "ژمارەی تەلەفۆن / پەیوەندی"], "حفظ الإعدادات العامة": ["Save general settings", "پاشەکەوتکردنی ڕێکخستنە گشتییەکان"], "♻️ تصفير وإغلاق السنة المخزنية": ["♻️ Reset and close the inventory year", "♻️ سفرکردنەوە و داخستنی ساڵی کۆگا"], "إغلاق السنة ونقل الأرصدة الافتتاحية": ["Close the year and carry over opening balances", "داخستنی ساڵ و گواستنەوەی هاوسەنگییە سەرەتاییەکان"], "يقوم النظام بحذف سجل الحركات الحالي بالكامل لتسريع البرنامج، مع نقل جرد المواد الحالي وكمياتها لتصبح هي الرصيد الافتتاحي للعام الجديد.": ["The system deletes the entire current transaction log to speed up the program, and carries over the current inventory and quantities to become the opening balance of the new year.", "سیستەمەکە تۆماری جووڵەکانی ئێستا بە تەواوی دەسڕێتەوە بۆ خێراکردنی بەرنامەکە، و جەردی ئێستای مادەکان و بڕەکانیان دەگوازێتەوە بۆ ئەوەی ببێتە هاوسەنگی سەرەتایی ساڵی نوێ."], "تصفير وبدء سنة جديدة": ["Reset and start a new year", "سفرکردنەوە و دەستپێکردنی ساڵێکی نوێ"], "إذن حركة مواد": ["Material movement slip", "وەسڵی جووڵەی مادە"], "تاريخ الحركة *": ["Transaction date *", "بەرواری جووڵە *"], "ملاحظات عامة للوصل *": ["General notes for the slip *", "تێبینی گشتی بۆ وەسڵ *"], "سبب الإدخال أو الإخراج...": ["Reason for in or out...", "هۆکاری داخڵکردن یان دەرکردن..."], "المواد المشمولة في هذا الوصل:": ["Materials included in this slip:", "ئەو مادانەی لەم وەسڵەدا هەن:"], "+ إضافة مادة للوصل": ["+ Add material to slip", "+ زیادکردنی مادە بۆ وەسڵ"], "كود المادة": ["Material code", "کۆدی مادە"], "اسم المادة": ["Material name", "ناوی مادە"], "الكمية": ["Quantity", "بڕ"], "الاكسباير": ["Expiry", "بەسەرچوون"], "حذف": ["Delete", "سڕینەوە"], "اعتماد وحفظ الوصل": ["Approve and save slip", "پەسەندکردن و پاشەکەوتکردنی وەسڵ"], "إلغاء": ["Cancel", "هەڵوەشاندنەوە"], "كود المادة...": ["Material code...", "کۆدی مادە..."], "تاريخ الاكسباير": ["Expiry date", "بەرواری بەسەرچوون"], "الوجبة / الاكسباير": ["Batch / Expiry", "بەتش / بەسەرچوون"], "بدون اكسباير": ["No expiry", "بێ بەرواری بەسەرچوون"], "إذن إدخال مواد أولية": ["Materials In Slip", "وەسڵی داخڵکردنی مادە"], "إذن إخراج مواد أولية": ["Materials Out Slip", "وەسڵی دەرکردنی مادە"], "تعديل إذن إدخال مواد أولية": ["Edit Materials In Slip", "دەستکاریکردنی وەسڵی داخڵکردنی مادە"], "تعديل إذن إخراج مواد أولية": ["Edit Materials Out Slip", "دەستکاریکردنی وەسڵی دەرکردنی مادە"], "تعديل رصيد افتتاحي": ["Edit opening balance", "دەستکاریکردنی هاوسەنگی سەرەتایی"], "رصيد افتتاحي مرحّل": ["Carried-over opening balance", "هاوسەنگی سەرەتایی گوازراوە"], "رصيد افتتاحي مرحّل من العام السابق": ["Opening balance carried over from the previous year", "هاوسەنگی سەرەتایی گوازراوە لە ساڵی ڕابردوو"], "الحالة": ["Status", "دۆخ"], "الوحدة": ["Unit", "یەکە"], "الكمية الحالية الإجمالية": ["Total current quantity", "کۆی بڕی ئێستا"], "اسم المادة الأولية": ["Material name", "ناوی مادە"], "الحد الأدنى": ["Minimum", "کەمترین ڕادە"], "إجراء": ["Action", "کردار"], "تحت الحد الأدنى": ["Below minimum", "خوار کەمترین ڕادە"], "جيد": ["Good", "باش"], "لا توجد مواد أولية تطابق بحثك.": ["No materials match your search.", "هیچ مادەیەک نییە لەگەڵ گەڕانەکەت بگونجێت."], "(المتبقي: {0} / الحد: {1})": ["(Remaining: {0} / Limit: {1})", "(ماوە: {0} / کەمترین ڕادە: {1})"], "(وجبة: {0} | متبقي: {1} يوم)": ["(Batch: {0} | {1} days left)", "(بەتش: {0} | {1} ڕۆژ ماوە)"], "(وجبة: {0} | منتهية الصلاحية!)": ["(Batch: {0} | Expired!)", "(بەتش: {0} | بەسەرچووە!)"], "الوجبات:": ["Batches:", "بەتشەکان:"], "لا توجد وجبات نشطة": ["No active batches", "هیچ بەتشێکی چالاک نییە"], "(متاح: {0})": ["(Available: {0})", "(بەردەست: {0})"], "سجل الحركات فارغ لهذا التحديد.": ["The transaction log is empty for this selection.", "تۆماری جووڵەکان بۆ ئەم هەڵبژاردنە بەتاڵە."], "رقم الوصل": ["Slip No.", "ژمارەی وەسڵ"], "التاريخ": ["Date", "بەروار"], "النوع": ["Type", "جۆر"], "المواد والكميات": ["Materials & quantities", "مادە و بڕەکان"], "ملاحظات الوصل": ["Slip notes", "تێبینییەکانی وەسڵ"], "اكسباير:": ["Expiry:", "بەسەرچوون:"], "إدخال": ["In", "داخڵکردن"], "افتتاحي": ["Opening", "سەرەتایی"], "إخراج": ["Out", "دەرکردن"], "تعديل الحركة": ["Edit transaction", "دەستکاریکردنی جووڵە"], "طباعة الوصل": ["Print slip", "چاپکردنی وەسڵ"], "لا توجد مواد أولية مسجلة.": ["No materials registered.", "هیچ مادەیەک تۆمار نەکراوە."], "لا توجد مواد مسجلة.": ["No materials registered.", "هیچ مادەیەک تۆمار نەکراوە."], "حذف هذا الوصل بالكامل؟": ["Delete this slip entirely?", "ئەم وەسڵە بە تەواوی بسڕدرێتەوە؟"], "حذف المادة الأولية؟": ["Delete this material?", "مادەکە بسڕدرێتەوە؟"], "تم الحذف بنجاح": ["Deleted successfully", "بە سەرکەوتوویی سڕایەوە"], "تم الحذف": ["Deleted", "سڕایەوە"], "كود المادة مستخدم مسبقاً!": ["This material code is already in use!", "کۆدی مادە پێشتر بەکارهاتووە!"], "تم الحفظ بنجاح": ["Saved successfully", "بە سەرکەوتوویی پاشەکەوت کرا"], "اكتب اسم الوحدة الجديدة أولاً": ["Type the new unit name first", "سەرەتا ناوی یەکەی نوێ بنووسە"], "يجب أن يحتوي الوصل على مادة واحدة على الأقل": ["The slip must contain at least one material", "پێویستە وەسڵەکە لانیکەم یەک مادەی تێدا بێت"], "يرجى تحديد كود المادة أو اسمها لكل صف": ["Please specify the material code or name for every row", "تکایە کۆد یان ناوی مادە بۆ هەر ڕیزێک دیاری بکە"], "المادة غير مسجلة أو الكود خاطئ: \"{0}\"": ["Material not registered or wrong code: \"{0}\"", "مادەکە تۆمار نەکراوە یان کۆدەکە هەڵەیە: \"{0}\""], "الكمية المطلوبة للمادة ({0}) أكبر من المتاح في المخزن ({1})!": ["The requested quantity for ({0}) exceeds the available stock ({1})!", "بڕی داواکراو بۆ مادەی ({0}) زیاترە لەوەی لە کۆگادا هەیە ({1})!"], "تم تحديث الوصل بنجاح": ["Slip updated successfully", "وەسڵەکە بە سەرکەوتوویی نوێکرایەوە"], "تم تسجيل وإصدار الوصل بنجاح": ["Slip recorded and issued successfully", "وەسڵەکە بە سەرکەوتوویی تۆمار کرا و دەرچوو"], "تم حفظ إعدادات المخزن بنجاح": ["Warehouse settings saved successfully", "ڕێکخستنەکانی کۆگا بە سەرکەوتوویی پاشەکەوت کران"], "تم تحميل ملف النسخة الاحتياطية": ["Backup file downloaded", "فایلی کۆپی پاشەکەوت داگیرا"], "تم استعادة البيانات بنجاح": ["Data restored successfully", "داتاکان بە سەرکەوتوویی گەڕێندرانەوە"], "الملف غير متوافق!": ["Incompatible file!", "فایلەکە گونجاو نییە!"], "ملف غير صالح!": ["Invalid file!", "فایلێکی نادروستە!"], "تم إلغاء التصفير": ["Reset cancelled", "سفرکردنەوە هەڵوەشێندرایەوە"], "المخزن فارغ مسبقاً!": ["The warehouse is already empty!", "کۆگا پێشتر بەتاڵە!"], "المخزن فارغ، لا توجد بيانات لتصديرها!": ["The warehouse is empty, no data to export!", "کۆگا بەتاڵە، هیچ داتایەک نییە بۆ هەناردەکردن!"], "تم تصدير تقرير Excel بنجاح 📊": ["Excel report exported successfully 📊", "ڕاپۆرتی Excel بە سەرکەوتوویی هەناردە کرا 📊"], "حدث خطأ أثناء التصدير!": ["An error occurred during export!", "هەڵەیەک ڕوویدا لە کاتی هەناردەکردندا!"], "تصفير": ["RESET", "سفرکردنەوە"], "أنت تطلب تصفير الحركات وبدء سنة مالية جديدة.\nسيقوم النظام بنقل الجرد الحالي كأرصدة افتتاحية.\n\nلتأكيد التصفير، اكتب كلمة (تصفير):": ["You are requesting to reset all transactions and start a new financial year.\nThe system will carry the current inventory over as opening balances.\n\nTo confirm, type the word (RESET):", "داوای سفرکردنەوەی جووڵەکان و دەستپێکردنی ساڵێکی دارایی نوێ دەکەیت.\nسیستەمەکە جەردی ئێستا دەگوازێتەوە وەک هاوسەنگی سەرەتایی.\n\nبۆ دڵنیابوونەوە لە سفرکردنەوە، ووشەی (سفرکردنەوە) بنووسە:"], "تم تصفير المخازن ونقل الأرصدة الافتتاحية للسنة الجديدة بنجاح!": ["The warehouse was reset and opening balances were carried over to the new year successfully!", "کۆگاکان سفر کرانەوە و هاوسەنگییە سەرەتاییەکان بۆ ساڵی نوێ بە سەرکەوتوویی گوازرانەوە!"], "إذن مخزني - رقم": ["Warehouse slip - No.", "وەسڵی کۆگا - ژمارە"], "العنوان: ": ["Address: ", "ناونیشان: "], "هاتف: ": ["Phone: ", "تەلەفۆن: "], "رقم الوصل:": ["Slip No.:", "ژمارەی وەسڵ:"], "تاريخ الحركة:": ["Transaction date:", "بەرواری جووڵە:"], "م": ["#", "ژ"], "كود الصنف": ["Item code", "کۆدی جۆر"], "ملاحظات الوصل:": ["Slip notes:", "تێبینییەکانی وەسڵ:"], "لا توجد ملاحظات": ["No notes", "هیچ تێبینییەک نییە"], "أمين المخزن": ["Storekeeper", "کۆگادار"], "المستلم / المعتمد": ["Receiver / Approver", "وەرگر / پەسەندکەر"], "جرد المواد الأولية": ["Materials Inventory", "جەردی مادەکان"], "تقرير جرد المواد والكميات الحالية": ["Materials and current quantities inventory report", "ڕاپۆرتی جەردی مادە و بڕە ئێستاکان"], "تاريخ الجرد: {0}": ["Inventory date: {0}", "بەرواری جەرد: {0}"], "الوجبات (الاكسباير)": ["Batches (Expiry)", "بەتشەکان (بەسەرچوون)"], "تقرير_المخزن": ["Warehouse_Report", "ڕاپۆرتی_کۆگا"], "قطعة": ["Piece", "دانە"], "كرتون": ["Carton", "کارتۆن"], "برميل": ["Barrel", "بەرمیل"], "كغم": ["Kg", "کگم"], "لتر": ["Liter", "لیتر"], "متر": ["Meter", "مەتر"], "إضافة وحدة ثانية مرتبطة بالوحدة الأساسية": ["Add a second unit linked to the base unit", "زیادکردنی یەکەی دووەم کە بەستراوەتەوە بە یەکەی بنەڕەتی"], "الوحدة الثانية": ["Second unit", "یەکەی دووەم"], "اكتب كم تساوي الوحدة الأساسية الواحدة بالوحدة الثانية (مثال: 1 كغم = 20 متر).": ["Enter how many second units equal one base unit (e.g. 1 kg = 20 m).", "بنووسە یەک یەکەی بنەڕەتی دەکاتە چەند یەکەی دووەم (نموونە: 1 کگم = 20 مەتر)."], "الرصيد:": ["Balance:", "ماوە:"], "اكتب الوحدة الثانية والمعامل (أكبر من صفر)": ["Enter the second unit and a factor greater than zero", "یەکەی دووەم و ژمارەی گۆڕین (گەورەتر لە سفر) بنووسە"], "الوحدة الثانية يجب أن تختلف عن الأساسية": ["The second unit must differ from the base unit", "یەکەی دووەم دەبێت جیاواز بێت لە یەکەی بنەڕەتی"]};
   const I18N = {};
   Object.keys(I18N_RAW).forEach(k => { I18N[NORM(k)] = I18N_RAW[k]; });
-  [
-   ['التقارير','Reports','ڕاپۆرتەکان'],['سجل التعديلات والنسخ','Audit log & backups','تۆماری دەستکاری و کۆپییەکان'],
-   ['نوع / سبب الحركة','Movement type / reason','جۆر / هۆکاری جووڵە'],['الجهة','Party','لایەن'],['المورّد','Supplier','دابینکەر'],
-   ['الجهة المستلمة','Receiving party','لایەنی وەرگر'],['مورّد / جهة مستلمة','Supplier / receiving party','دابینکەر / لایەنی وەرگر'],
-   ['جارٍ التحميل…','Loading…','باردەکرێت…'],['تُحفظ البيانات أونلاين وتتزامن فوراً بين المدير والموظفة.','Data is saved online and synced instantly between manager and employee.','داتاکان ئۆنلاین پاشەکەوت دەکرێن و یەکسەر لە نێوان بەڕێوەبەر و کارمەند هاوکات دەکرێن.'],
-   ['شراء من مورّد','Purchase from supplier','کڕین لە دابینکەر'],['إرجاع من الإنتاج','Return from production','گەڕاندنەوە لە بەرهەمهێنان'],['تسوية زيادة جرد','Stock count surplus adjustment','ڕێکخستنی زیادەی جەرد'],
-   ['صرف للإنتاج','Issued to production','دەرکردن بۆ بەرهەمهێنان'],['بيع / تسليم','Sale / delivery','فرۆشتن / تەسلیم'],['تالف / هالك','Damaged / waste','خراپ / فەوتاو'],['تسوية نقص جرد','Stock count shortage adjustment','ڕێکخستنی کەمی جەرد'],
-   ['تسجيل الدخول','Sign in','چوونەژوورەوە'],['البريد الإلكتروني','Email','ئیمەیڵ'],['كلمة المرور','Password','وشەی نهێنی'],['دخول','Login','چوونەژوورەوە'],['جارٍ الدخول…','Signing in…','چوونەژوورەوە…'],
-   ['البريد أو كلمة المرور غير صحيحة','Incorrect email or password','ئیمەیڵ یان وشەی نهێنی هەڵەیە'],['هذا الحساب غير مفعّل. تواصل مع المدير.','This account is not activated. Contact the manager.','ئەم هەژمارە چالاک نەکراوە. پەیوەندی بە بەڕێوەبەرەوە بکە.'],
-   ['حساب المدير','Manager account','هەژماری بەڕێوەبەر'],['حساب الموظفة','Employee account','هەژماری کارمەند'],['حساب مشاهدة','View-only account','هەژماری تەنها بینین'],['خروج','Logout','دەرچوون'],
-   ['آخر التعديلات','Recent changes','دوایین دەستکارییەکان'],['المحذوفات (يمكن استعادتها)','Deleted items (can be restored)','سڕاوەکان (دەگەڕێنرێنەوە)'],['النسخ الاحتياطية التلقائية','Automatic backups','کۆپییە پاشەکەوتەکانی خۆکار'],
-   ['أخذ نسخة الآن','Take a backup now','وەرگرتنی کۆپی ئێستا'],['تنزيل آخر نسخة','Download latest backup','داگرتنی دوایین کۆپی'],['استعادة','Restore','گەڕاندنەوە'],['إضافة','Added','زیادکرا'],['تعديل','Edited','دەستکاریکرا'],['حذف','Deleted','سڕایەوە'],
-   ['مادة','material','مادە'],['وصل','slip','وەسڵ'],['تمت الاستعادة','Restored','گەڕێندرایەوە'],['تم أخذ نسخة','Backup taken','کۆپی وەرگیرا'],['لا توجد بيانات','No data','هیچ داتایەک نییە'],
-   ['رقم الوصل مكرر، أعد المحاولة','Duplicate slip number, try again','ژمارەی وەسڵ دووبارەیە، دووبارە هەوڵبدەرەوە'],['تعذّر الحفظ:','Could not save:','پاشەکەوت نەکرا:'],['تعذّر تحميل البيانات','Could not load data','داتاکان بار نەکران'],
-   ['المتصفح لا يدعم قراءة الباركود. استخدم Chrome على أندرويد.','This browser does not support barcode scanning. Use Chrome on Android.','ئەم وێبگەڕە پشتگیری خوێندنەوەی باڕکۆد ناکات. Chrome لە ئەندرۆید بەکاربێنە.'],['تعذّر فتح الكاميرا','Could not open the camera','کامێرا نەکرایەوە'],['إغلاق','Close','داخستن'],
-   ['النوع:','Type:','جۆر:'],['المورّد:','Supplier:','دابینکەر:'],['الجهة المستلمة:','Receiving party:','لایەنی وەرگر:'],
-   ['حركة مادة','Material movement','جووڵەی مادە'],['مواد راكدة','Idle materials','مادە ڕاوەستاوەکان'],['حسب الجهة','By party','بەپێی لایەن'],
-   ['المادة (اكتب الكود أو الاسم)','Material (type code or name)','مادە (کۆد یان ناو بنووسە)'],['من','From','لە'],['إلى','To','بۆ'],['هذا الشهر','This month','ئەم مانگە'],['آخر 30 يوم','Last 30 days','دوایین ٣٠ ڕۆژ'],['هذه السنة','This year','ئەمساڵ'],['الكل','All','هەموو'],
-   ['الداخل','In','داخڵ'],['الخارج','Out','دەرچوو'],['الصافي','Net','پوختە'],['الجهة المستلمة / المورّد','Party','لایەن'],['عدد الوصولات','Number of slips','ژمارەی وەسڵەکان'],['إجمالي الداخل','Total in','کۆی داخڵ'],['إجمالي الخارج','Total out','کۆی دەرچوو'],
-   ['آخر حركة','Last movement','دوایین جووڵە'],['الرصيد','Balance','هاوسەنگی'],['الكود','Code','کۆد'],['عدم الحركة لمدة','No movement for','بێ جووڵە بۆ ماوەی'],['يوم','days','ڕۆژ'],['تنزيل CSV','Download CSV','داگرتنی CSV'],
-   ['اختر مادة صحيحة من القائمة','Choose a valid material from the list','مادەیەکی دروست لە لیستەکە هەڵبژێرە'],['لا توجد حركات في هذه الفترة','No movements in this period','هیچ جووڵەیەک نییە لەم ماوەیەدا'],['لا توجد مواد راكدة 👍','No idle materials 👍','هیچ مادەیەکی ڕاوەستاو نییە 👍'],['لا توجد حركات بجهات مسجلة','No movements with a registered party','هیچ جووڵەیەک نییە بە لایەنی تۆمارکراو'],
-   ['هل تريد حفظ نسخة من البيانات على جهازك قبل الخروج؟','Do you want to save a copy of the data to your device before logging out?','دەتەوێت پێش دەرچوون کۆپییەک لە داتاکان لەسەر ئامێرەکەت پاشەکەوت بکەیت؟'],
-   ['نعم، احفظ نسخة ثم اخرج','Yes, save a copy then log out','بەڵێ، کۆپی پاشەکەوت بکە و دەرچۆ'],['لا، اخرج بدون نسخة','No, log out without a copy','نەخێر، بەبێ کۆپی دەرچۆ'],['إلغاء (البقاء في البرنامج)','Cancel (stay in the program)','هەڵوەشاندنەوە (مانەوە لە بەرنامەکە)']
-  ].forEach(r => { I18N[NORM(r[0])] = [r[1], r[2]]; });
-
   let lang = 'ar';
   function isRtl() { return lang !== 'en'; }
   // يترجم النص العربي إلى اللغة الحالية، ويعيد النص كما هو إن لم تتوفر ترجمة (مثل أسماء المواد وملاحظات المستخدم)
@@ -638,11 +639,7 @@
     applyHeaderNames();
     $('#matSubmitBtn').textContent = tl($('#matEditId').value ? 'تحديث المادة' : 'حفظ المادة');
     refreshSlipTitles();
-    if ($('#txType') && $('#txType').value) setSub($('#txType').value, $('#txSub').value, $('#txParty').value);
     renderAll();
-    if (typeof setRoleLabel === 'function' && ME) setRoleLabel();
-    if ($('#view-reports.active')) renderReports();
-    if ($('#view-audit.active') && ROLE === 'manager') renderAudit();
   }
 
   function loadSettings() {
@@ -679,13 +676,10 @@
   }
 
   // ===== المزامنة مع Supabase =====
-  function showFatal(m){ const g = document.getElementById('whGate'); if (g) { g.style.display = 'flex'; g.style.flexDirection = 'column'; g.textContent = m; } }
-  window.addEventListener('error', e => showFatal('حدث خطأ: ' + (e.message || '')));
-  if (!window.supabase) { showFatal('تعذّر تحميل مكتبة الربط. تأكد من الإنترنت أو جرّب شبكة/متصفح آخر ثم أعد تحميل الصفحة.'); throw new Error('supabase lib missing'); }
   const SB = window.supabase.createClient('https://zwxjnpujbkeucfshlgtw.supabase.co', 'sb_publishable_5L_0dwVbXdK7bZVVRR8F0g_a9v4XUDk');
   let ROLE = 'employee', cloudSettings = null, shared = {}, lastSent = { materials: {}, transactions: {} };
-  let pending = 0, refetchTimer = null, started = false, ME = '', lastFull = Date.now();
-  function onErr(e){ showToast(tl('تعذّر الحفظ:') + ' ' + ((e && e.message) || ''), true); }
+  let pending = 0, refetchTimer = null, started = false;
+  function onErr(e){ showToast('تعذّر الحفظ: ' + ((e && e.message) || ''), true); }
   function loadData(key, fallback){ return fallback; }
   function saveData(key, val){
     pending++;
@@ -693,16 +687,11 @@
     const run = async () => {
       if (key === 'materials' || key === 'transactions') {
         const prev = lastSent[key], next = {}, add = [], upd = [];
-        val.forEach(o => { if (key === 'transactions' && !o.by && !(String(o.id) in prev)) o.by = ME.split('@')[0];
-          const id = String(o.id), j = JSON.stringify(o); next[id] = j;
+        val.forEach(o => { const id = String(o.id), j = JSON.stringify(o); next[id] = j;
           if (!(id in prev)) add.push({ id, j }); else if (prev[id] !== j) upd.push({ id, j }); });
         const del = Object.keys(prev).filter(id => !(id in next));
         lastSent[key] = next;
-        const lg = [].concat(add.map(x => ['إضافة', x.id]), upd.map(x => ['تعديل', x.id]), del.map(x => ['حذف', x]))
-          .map(a => ({ who: ME, action: a[0], tbl: key === 'materials' ? 'مادة' : 'وصل', ref: String(a[1]) }));
-        if (lg.length) SB.from('audit').insert(lg).then(() => {});
-        if (del.length) await SB.from('archive').insert(del.map(id => ({ tbl: key, ref: id, who: ME, j: prev[id] })));
-        if (add.length) { const r = await SB.from(key).insert(add); if (r.error) { r.error.code === '23505' ? showToast(tl('رقم الوصل مكرر، أعد المحاولة'), true) : onErr(r.error); } }
+        if (add.length) { const r = await SB.from(key).insert(add); if (r.error) { r.error.code === '23505' ? showToast('رقم الوصل مكرر، أعد المحاولة', true) : onErr(r.error); } }
         if (upd.length) { const r = await SB.from(key).upsert(upd); if (r.error) onErr(r.error); }
         if (del.length) { const r = await SB.from(key).delete().in('id', del); if (r.error) onErr(r.error); }
       } else if (key === 'settings') {
@@ -717,17 +706,10 @@
   }
   function scheduleFetch(){ clearTimeout(refetchTimer); refetchTimer = setTimeout(fetchAll, 300); }
   const parseRows = rows => (rows || []).map(r => { try { return JSON.parse(r.j); } catch(e){ return null; } }).filter(Boolean);
-  async function selAll(tbl){
-    let all = [], from = 0;
-    for (;;) { const r = await SB.from(tbl).select('*').order('id').range(from, from + 999);
-      if (r.error) return r; all = all.concat(r.data || []); if (!r.data || r.data.length < 1000) break; from += 1000; }
-    return { data: all, error: null };
-  }
   async function fetchAll(){
     if (pending > 0) return;
-    lastFull = Date.now();
-    const [m, t, st, sh] = await Promise.all([selAll('materials'), selAll('transactions'), SB.from('settings').select('*'), SB.from('shared').select('*')]);
-    if (m.error || t.error) { showToast(tl('تعذّر تحميل البيانات'), true); return; }
+    const [m, t, st, sh] = await Promise.all([SB.from('materials').select('*'), SB.from('transactions').select('*'), SB.from('settings').select('*'), SB.from('shared').select('*')]);
+    if (m.error || t.error) { showToast('تعذّر تحميل البيانات', true); return; }
     if (pending > 0) return;
     materials = parseRows(m.data).sort((a,b) => String(a.id).localeCompare(String(b.id)));
     transactions = parseRows(t.data).sort((a,b) => (a.createdAt||0)-(b.createdAt||0) || (Number(a.id)||0)-(Number(b.id)||0));
@@ -736,102 +718,37 @@
     const sRow = (st.data || [])[0]; try { cloudSettings = sRow ? JSON.parse(sRow.j) : null; } catch(e){}
     (sh.data || []).forEach(r => { try { shared[r.id] = JSON.parse(r.j); } catch(e){} });
     if (Array.isArray(shared.customUnits)) customUnits = shared.customUnits;
-    materials.forEach(x => ensureUnit(x.unit));
+    materials.forEach(x => { ensureUnit(x.unit); ensureUnit(x.unit2); });
     populateUnits(); loadSettings(); renderAll();
-  }
-  const fmtT = t => new Date(t).toLocaleString(lang === 'en' ? 'en-GB' : lang === 'ckb' ? 'ckb-IQ' : 'ar-EG');
-  async function snapshot(){ const str = JSON.stringify({ materials, transactions, settings, customUnits }); await SB.from('backups').insert({ j: str }); }
-  async function autoBackup(){
-    const r = await SB.from('backups').select('id,at').order('at', { ascending: false });
-    if (r.error) return;
-    const d = r.data || [];
-    if (!d.length || Date.now() - new Date(d[0].at).getTime() > 7*864e5) { await snapshot(); }
-    if (d.length > 1) await SB.from('backups').delete().in('id', d.slice(1).map(x => x.id));
-  }
-  async function renderAudit(){
-    const box = $('#auditBox'); box.innerHTML = tl('جارٍ التحميل…');
-    const [a, ar, b] = await Promise.all([SB.from('audit').select('*').order('at', { ascending: false }).limit(100), SB.from('archive').select('*').order('at', { ascending: false }).limit(50), SB.from('backups').select('id,at').order('at', { ascending: false })]);
-    const th = 'style="padding:6px;border-bottom:1px solid #DDD3BC;text-align:start"';
-    box.innerHTML = '<h3>🗂 ' + tl('آخر التعديلات') + '</h3><div style="overflow-x:auto"><table style="width:100%;font-size:13px;border-collapse:collapse">' + (a.data||[]).map(r => `<tr><td ${th}>${fmtT(r.at)}</td><td ${th}>${escapeHtml(r.who||'')}</td><td ${th}>${r.action} ${r.tbl}</td><td ${th}>${escapeHtml(r.ref||'')}</td></tr>`).join('') + '</table></div>'
-      + '<h3>♻️ ' + tl('المحذوفات (يمكن استعادتها)') + '</h3><div style="overflow-x:auto"><table style="width:100%;font-size:13px;border-collapse:collapse">' + (ar.data||[]).map(r => `<tr><td ${th}>${fmtT(r.at)}</td><td ${th}>${escapeHtml(r.who||'')}</td><td ${th}>${tl(r.tbl === 'materials' ? 'مادة' : 'وصل')} ${escapeHtml(r.ref)}</td><td ${th}><button data-rest="${r.id}" type="button">${tl('استعادة')}</button></td></tr>`).join('') + '</table></div>'
-      + '<h3>💾 ' + tl('النسخ الاحتياطية التلقائية') + '</h3><button id="btnSnapNow" type="button">' + tl('أخذ نسخة الآن') + '</button> <button id="btnSnapDl" type="button">⬇ ' + tl('تنزيل آخر نسخة') + '</button><div style="font-size:13px;margin-top:8px">' + (b.data||[]).map(r => fmtT(r.at)).join(' • ') + '</div>';
-    $$('[data-rest]').forEach(btn => btn.onclick = () => {
-      const row = ar.data.find(x => String(x.id) === btn.dataset.rest); if (!row) return;
-      const o = JSON.parse(row.j);
-      if (row.tbl === 'materials') { if (!materials.some(m => m.id === o.id)) materials.push(o); saveData('materials', materials); }
-      else { if (!transactions.some(t => String(t.id) === String(o.id))) transactions.push(o); saveData('transactions', transactions); }
-      SB.from('archive').delete().eq('id', row.id).then(() => { renderAll(); renderAudit(); showToast(tl('تمت الاستعادة')); });
-    });
-    $('#btnSnapNow').onclick = async () => { await snapshot(); renderAudit(); showToast(tl('تم أخذ نسخة')); };
-    $('#btnSnapDl').onclick = async () => { const r = await SB.from('backups').select('j').order('at', { ascending: false }).limit(1); if (r.data && r.data[0]) saveFile(r.data[0].j, 'Backup_' + todayStr() + '.json'); };
   }
   function loginUI(msg){
     const g = $('#whGate'); g.style.display = 'flex';
-    const inp = 'width:100%;padding:12px;margin-bottom:8px;border:1px solid #DDD3BC;border-radius:8px;font-size:15px';
-    g.innerHTML = '<div style="max-width:320px;width:100%"><div style="font-size:20px;margin-bottom:14px">📦 ' + tl('تسجيل الدخول') + '</div>'
-      + '<input id="whEmail" type="email" dir="ltr" placeholder="' + tl('البريد الإلكتروني') + '" style="' + inp + '">'
-      + '<input id="whPass" type="password" dir="ltr" placeholder="' + tl('كلمة المرور') + '" style="' + inp + '">'
-      + '<button id="whLoginBtn" type="button" style="width:100%;padding:12px;border:none;border-radius:8px;background:#33454C;color:#fff;font-weight:700;font-size:15px;cursor:pointer">' + tl('دخول') + '</button>'
-      + '<div id="whLoginMsg" style="color:#B0453B;font-size:13px;margin-top:10px">' + (msg ? tl(msg) : '') + '</div></div>';
+    g.innerHTML = '<div style="max-width:320px;width:100%"><div style="font-size:20px;margin-bottom:14px">📦 تسجيل الدخول</div>'
+      + '<input id="whEmail" type="email" dir="ltr" placeholder="البريد الإلكتروني" style="width:100%;padding:12px;margin-bottom:8px;border:1px solid #DDD3BC;border-radius:8px;font-size:15px">'
+      + '<input id="whPass" type="password" dir="ltr" placeholder="كلمة المرور" style="width:100%;padding:12px;margin-bottom:10px;border:1px solid #DDD3BC;border-radius:8px;font-size:15px">'
+      + '<button id="whLoginBtn" type="button" style="width:100%;padding:12px;border:none;border-radius:8px;background:#33454C;color:#fff;font-weight:700;font-size:15px;cursor:pointer">دخول</button>'
+      + '<div id="whLoginMsg" style="color:#B0453B;font-size:13px;margin-top:10px">' + (msg || '') + '</div></div>';
     const go = async () => {
-      $('#whLoginMsg').textContent = tl('جارٍ الدخول…');
+      $('#whLoginMsg').textContent = 'جارٍ الدخول…';
       const r = await SB.auth.signInWithPassword({ email: $('#whEmail').value.trim(), password: $('#whPass').value });
-      if (r.error) { $('#whLoginMsg').textContent = tl('البريد أو كلمة المرور غير صحيحة'); return; }
+      if (r.error) { $('#whLoginMsg').textContent = 'البريد أو كلمة المرور غير صحيحة'; return; }
       boot(r.data.session);
     };
     $('#whLoginBtn').onclick = go; $('#whPass').onkeydown = e => { if (e.key === 'Enter') go(); };
-  }
-  function setRoleLabel(){
-    const lab = $('#whRole'); if (!lab) return;
-    lab.innerHTML = '👤 ' + tl(ROLE === 'manager' ? 'حساب المدير' : ROLE === 'viewer' ? 'حساب مشاهدة' : 'حساب الموظفة') + ' &nbsp; <button id="whLogout" type="button" style="background:none;border:1px solid #E0992F;color:#E0992F;border-radius:6px;padding:2px 10px;cursor:pointer;font-family:inherit">' + tl('خروج') + '</button>';
-    $('#whLogout').onclick = () => {
-      const doLogout = async (wait) => { if (wait) await new Promise(r => setTimeout(r, 900)); await SB.auth.signOut(); location.reload(); };
-      if (ROLE === 'viewer') return doLogout(false);
-      const ov = document.createElement('div');
-      ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
-      const bs = 'display:block;width:100%;padding:11px;margin-top:8px;border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;';
-      ov.innerHTML = '<div style="background:#fff;border-radius:12px;padding:22px;max-width:360px;width:100%;text-align:center;color:#33454C">'
-        + '<div style="font-weight:700;font-size:16px;line-height:1.7">' + tl('هل تريد حفظ نسخة من البيانات على جهازك قبل الخروج؟') + '</div>'
-        + '<button id="xBk" type="button" style="' + bs + 'border:none;background:#33454C;color:#fff">' + tl('نعم، احفظ نسخة ثم اخرج') + '</button>'
-        + '<button id="xNo" type="button" style="' + bs + 'border:1px solid #DDD3BC;background:#fff;color:#33454C">' + tl('لا، اخرج بدون نسخة') + '</button>'
-        + '<button id="xCa" type="button" style="' + bs + 'border:none;background:none;color:#8a8a8a;font-weight:400">' + tl('إلغاء (البقاء في البرنامج)') + '</button></div>';
-      document.body.appendChild(ov);
-      ov.querySelector('#xBk').onclick = () => { runBackup(); doLogout(true); };
-      ov.querySelector('#xNo').onclick = () => doLogout(false);
-      ov.querySelector('#xCa').onclick = () => ov.remove();
-    };
   }
   async function boot(session){
     if (!session) return loginUI();
     const r = await SB.from('roles').select('role').eq('user_id', session.user.id).maybeSingle();
     if (r.error || !r.data) { await SB.auth.signOut(); return loginUI('هذا الحساب غير مفعّل. تواصل مع المدير.'); }
-    ROLE = r.data.role; ME = session.user.email || '';
+    ROLE = r.data.role;
     root.classList.toggle('role-emp', ROLE !== 'manager');
-    root.classList.toggle('role-view', ROLE === 'viewer');
-    setRoleLabel();
+    const lab = $('#whRole');
+    if (lab) { lab.innerHTML = (ROLE === 'manager' ? '👤 حساب المدير' : '👤 حساب الموظفة') + ' &nbsp; <button id="whLogout" type="button" style="background:none;border:1px solid #E0992F;color:#E0992F;border-radius:6px;padding:2px 10px;cursor:pointer;font-family:inherit">خروج</button>'; $('#whLogout').onclick = async () => { await SB.auth.signOut(); location.reload(); }; }
     $('#whGate').style.display = 'none';
     await fetchAll();
-    if (ROLE === 'manager' && !started) { const at = $('.wh-tab[data-view="audit"]'); if (at) at.addEventListener('click', renderAudit); autoBackup(); }
     if (!started) { started = true;
-      let rt = null, subOnce = false;
-      const refresh = () => { clearTimeout(rt); rt = setTimeout(() => { materials.forEach(x => ensureUnit(x.unit)); populateUnits(); loadSettings(); renderAll(); }, 150); };
-      const applyChange = p => {
-        const t = p.table, row = p.new && p.new.id !== undefined ? p.new : null;
-        if (t === 'materials' || t === 'transactions') {
-          const arr = t === 'materials' ? materials : transactions;
-          if (p.eventType === 'DELETE') { const id = String(p.old.id), k = arr.findIndex(o => String(o.id) === id); if (k > -1) arr.splice(k, 1); delete lastSent[t][id]; }
-          else if (row) { let o; try { o = JSON.parse(row.j); } catch(e){ return; }
-            const k = arr.findIndex(x => String(x.id) === String(o.id)); if (k > -1) arr[k] = o; else arr.push(o);
-            lastSent[t][String(o.id)] = row.j;
-            arr.sort(t === 'materials' ? (a,b) => String(a.id).localeCompare(String(b.id)) : (a,b) => (a.createdAt||0)-(b.createdAt||0) || (Number(a.id)||0)-(Number(b.id)||0)); }
-          else return;
-        } else if (t === 'settings' && row) { try { cloudSettings = JSON.parse(row.j); } catch(e){ return; } }
-        else if (t === 'shared' && row) { try { shared[row.id] = JSON.parse(row.j); } catch(e){ return; } if (Array.isArray(shared.customUnits)) customUnits = shared.customUnits; }
-        else return;
-        refresh();
-      };
-      SB.channel('wh').on('postgres_changes', { event: '*', schema: 'public' }, applyChange).subscribe(st => { if (st === 'SUBSCRIBED') { if (subOnce) fetchAll(); subOnce = true; } });
-      document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - lastFull > 1800000) fetchAll(); });
+      SB.channel('wh').on('postgres_changes', { event: '*', schema: 'public' }, scheduleFetch).subscribe();
+      setInterval(() => { if (!document.hidden) fetchAll(); }, 20000);
     }
   }
   async function startCloud(){
@@ -927,6 +844,22 @@
     return { balance: inSum - outSum, batches };
   }
 
+  // الرصيد بعد كل حركة: تراكمي لكل مادة بترتيب (التاريخ ثم وقت الإنشاء)
+  function computeRunning() {
+    const map = {}, bal = {};
+    const sorted = transactions.slice().sort((a,b) => (a.date||'').localeCompare(b.date||'') || (a.createdAt||0)-(b.createdAt||0) || (Number(a.id)||0)-(Number(b.id)||0));
+    sorted.forEach(t => {
+      const lines = t.items ? t.items.map(i => ({ mat: findMaterial(i.materialQuery), qty: Number(i.qty) }))
+                            : [{ mat: findMaterial(t.materialName), qty: Number(t.qty) }];
+      map[t.id] = lines.map(l => {
+        if(!l.mat) return null;
+        bal[l.mat.id] = r6((bal[l.mat.id] || 0) + (t.type === 'out' ? -1 : 1) * l.qty);
+        return bal[l.mat.id];
+      });
+    });
+    return map;
+  }
+
   function updateMonthFilters() {
     const monthSelect = $('#logFilterMonth');
     if(!monthSelect) return;
@@ -1018,7 +951,7 @@
         <td class="en" style="font-weight:bold; color:var(--steel);">${escapeHtml(m.code)}</td>
         <td>${escapeHtml(m.name)}</td>
         <td>${escapeHtml(tl(m.category||'—'))}</td>
-        <td style="font-weight:700">${fmtNum(b.balance)} ${batchStr}</td>
+        <td style="font-weight:700">${fmtNum(b.balance)}${hasU2(m) ? `<span class="wh-batch-details" style="color:var(--amber-dark);font-weight:700">= ${fmtNum(fromBase(m, b.balance))} ${escapeHtml(tl(m.unit2))}</span>` : ''} ${batchStr}</td>
         <td>${escapeHtml(tl(m.unit||'قطعة'))}</td>
         <td>${isLow ? `<span class="badge badge-low">${tl('تحت الحد الأدنى')}</span>` : `<span class="badge badge-ok">${tl('جيد')}</span>`}</td>
       </tr>`;
@@ -1078,19 +1011,25 @@
       return;
     }
 
+    const running = computeRunning();
+    const balBadge = (mat, b) => (mat && b !== null && b !== undefined)
+      ? ` <span style="display:inline-block;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:1px 8px;font-size:12px;font-weight:700;color:var(--steel-dark);margin-inline-start:6px;">${tl('الرصيد:')} ${fmtNum(b)} ${escapeHtml(tl(mat.unit||'قطعة'))}${u2Text(mat, b)}</span>` : '';
+
     wrap.innerHTML = `<table class="wh-table">
       <thead><tr><th>${tl('رقم الوصل')}</th><th>${tl('التاريخ')}</th><th>${tl('النوع')}</th><th>${tl('المواد والكميات')}</th><th>${tl('ملاحظات الوصل')}</th><th>${tl('إجراء')}</th></tr></thead>
       <tbody>
         ${filtered.map(t => {
           let itemsDesc = '';
           if(t.items) {
-            itemsDesc = t.items.map(i => {
+            itemsDesc = t.items.map((i, idx) => {
               const mat = findMaterial(i.materialQuery);
               const nameStr = mat ? `(${mat.code})${mat.name}` : i.materialQuery;
-              return `<div>• <strong>${escapeHtml(nameStr)}</strong>: ${fmtNum(i.qty)}${i.expiryDate ? '('+tl('اكسباير:')+' '+tl(i.expiryDate)+')' : ''}</div>`;
+              const unitStr = mat ? ' ' + escapeHtml(tl(mat.unit||'قطعة')) : '';
+              return `<div style="margin-bottom:4px;">• <strong>${escapeHtml(nameStr)}</strong>: ${fmtNum(i.qty)}${unitStr}${u2Text(mat, i.qty)}${i.expiryDate ? ' ('+tl('اكسباير:')+' '+tl(i.expiryDate)+')' : ''}${balBadge(mat, (running[t.id]||[])[idx])}</div>`;
             }).join('');
           } else {
-            itemsDesc = `<div>• <strong>${escapeHtml(t.materialName)}</strong>: ${fmtNum(t.qty)}${t.expiryDate ? '('+tl('اكسباير:')+' '+tl(t.expiryDate)+')' : ''}</div>`;
+            const lm = findMaterial(t.materialName);
+            itemsDesc = `<div style="margin-bottom:4px;">• <strong>${escapeHtml(t.materialName)}</strong>: ${fmtNum(t.qty)}${lm ? ' ' + escapeHtml(tl(lm.unit||'قطعة')) + u2Text(lm, t.qty) : ''}${t.expiryDate ? ' ('+tl('اكسباير:')+' '+tl(t.expiryDate)+')' : ''}${balBadge(lm, (running[t.id]||[])[0])}</div>`;
           }
 
           return `<tr>
@@ -1098,7 +1037,7 @@
             <td>${t.date||'—'}</td>
             <td>${t.type==='in'?`<span class="badge badge-in">${tl('إدخال')}</span>`:t.type==='init'?`<span class="badge badge-ok">${tl('افتتاحي')}</span>`:`<span class="badge badge-out">${tl('إخراج')}</span>`}</td>
             <td>${itemsDesc}</td>
-            <td>${escapeHtml(tl(t.notes||'—'))}${t.sub ? '<br><small style="color:var(--ink-soft)">' + escapeHtml(tl(t.sub)) + (t.party ? ' • ' + escapeHtml(t.party) : '') + '</small>' : ''}</td>
+            <td>${escapeHtml(tl(t.notes||'—'))}</td>
             <td style="white-space:nowrap;">
               <button class="wh-icon-btn" data-edit-tx="${t.id}" title="${tl('تعديل الحركة')}" type="button" style="color: var(--amber-dark);">✎</button>
               <button class="wh-icon-btn" data-print-tx="${t.id}" title="${tl('طباعة الوصل')}" type="button" style="color: var(--steel); font-size:16px;">🖨️</button>
@@ -1138,7 +1077,7 @@
               <td style="text-align:center;">${idx+1}</td>
               <td style="text-align:center; font-family: monospace;">${code}</td>
               <td>${name}</td>
-              <td style="text-align:center; font-weight: bold;">${fmtNum(i.qty)} ${unit}</td>
+              <td style="text-align:center; font-weight: bold;">${fmtNum(i.qty)} ${unit}${hasU2(mat) ? `<br><span style="font-weight:normal;font-size:12px;">(= ${fmtNum(fromBase(mat, i.qty))} ${escapeHtml(tl(mat.unit2))})</span>` : ''}</td>
               <td style="text-align:center;">${tl(i.expiryDate || '—')}</td>
             </tr>`;
           }).join('');
@@ -1207,11 +1146,11 @@
               </table>
 
               <div class="notes-box">
-                <strong>${tl('ملاحظات الوصل:')}</strong> ${escapeHtml(tl(tx.notes || 'لا توجد ملاحظات'))}${tx.sub ? '<br><strong>' + tl('النوع:') + '</strong> ' + escapeHtml(tl(tx.sub)) : ''}${tx.party ? '<br><strong>' + tl(tx.type === 'in' ? 'المورّد:' : 'الجهة المستلمة:') + '</strong> ' + escapeHtml(tx.party) : ''}
+                <strong>${tl('ملاحظات الوصل:')}</strong> ${escapeHtml(tl(tx.notes || 'لا توجد ملاحظات'))}
               </div>
 
               <div class="signatures">
-                <div class="sig-box">${tl('أمين المخزن')}${tx.by ? ': ' + escapeHtml(tx.by) : ''}</div>
+                <div class="sig-box">${tl('أمين المخزن')}</div>
                 <div class="sig-box">${tl('المستلم / المعتمد')}</div>
               </div>
             </div>
@@ -1263,6 +1202,10 @@
         $('#matCategory').value = m.category||'مادة أولية';
         ensureUnit(m.unit||'قطعة');
         populateUnits(m.unit||'قطعة');
+        $('#matHasUnit2').checked = hasU2(m);
+        if(hasU2(m)) { ensureUnit(m.unit2); populateUnit2(m.unit2); $('#matFactor').value = m.factor; }
+        else { populateUnit2(); $('#matFactor').value = ''; }
+        updateUnit2Box();
         $('#matMinStock').value = m.minStock??'';
         $('#matNotes').value = m.notes||'';
         $('#matSubmitBtn').textContent = tl('تحديث المادة');
@@ -1296,11 +1239,23 @@
         ensureUnit(unitVal);
       }
 
+      let unit2Val = '', factorVal = '';
+      if($('#matHasUnit2').checked) {
+        unit2Val = $('#matUnit2').value;
+        if(unit2Val === NEW_UNIT_VALUE) unit2Val = $('#matNewUnit2').value.trim();
+        factorVal = Number($('#matFactor').value);
+        if(!unit2Val || !(factorVal > 0)) { showToast(tl('اكتب الوحدة الثانية والمعامل (أكبر من صفر)'), true); return; }
+        if(unit2Val === unitVal) { showToast(tl('الوحدة الثانية يجب أن تختلف عن الأساسية'), true); return; }
+        ensureUnit(unit2Val);
+      }
+
       const data = {
         code,
         name,
         category: $('#matCategory').value,
         unit: unitVal,
+        unit2: unit2Val,
+        factor: factorVal,
         minStock: $('#matMinStock').value !== '' ? Number($('#matMinStock').value) : '',
         notes: $('#matNotes').value.trim()
       };
@@ -1371,14 +1326,30 @@
     }
   }
 
-  function addSlipRow(matCode = '', matName = '', qty = '', expiry = '') {
+  // يظهر اختيار الوحدة (الأساسية/الثانية) فقط للمواد التي لها وحدة ثانية
+  function refreshUnitField(tr, mat, presetUnit) {
+    const sel = tr.querySelector('.slip-unit-sel'), lbl = tr.querySelector('.slip-unit-lbl');
+    if(!sel || !lbl) return;
+    if(!mat) { sel.style.display = 'none'; lbl.textContent = ''; return; }
+    if(hasU2(mat)) {
+      const keep = presetUnit || sel.value;
+      sel.innerHTML = `<option value="${escapeHtml(mat.unit)}">${escapeHtml(tl(mat.unit))}</option><option value="${escapeHtml(mat.unit2)}">${escapeHtml(tl(mat.unit2))}</option>`;
+      sel.value = (keep === mat.unit2) ? mat.unit2 : mat.unit;
+      sel.style.display = ''; lbl.textContent = '';
+    } else {
+      sel.style.display = 'none'; sel.innerHTML = '';
+      lbl.textContent = tl(mat.unit || 'قطعة');
+    }
+  }
+
+  function addSlipRow(matCode = '', matName = '', qty = '', expiry = '', entryUnit = '') {
     const tbody = $('#slipItemsBody');
     if(!tbody) return;
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><input class="wh-input slip-code-input en" list="globalCodesList" placeholder="${tl('كود المادة...')}" value="${escapeHtml(matCode)}"></td>
       <td><input class="wh-input slip-name-input" list="globalNamesList" placeholder="${tl('اسم المادة...')}" value="${escapeHtml(matName)}"></td>
-      <td><input class="wh-input slip-qty-input" type="number" min="0.01" step="any" required placeholder="${tl('الكمية')}" value="${qty}"></td>
+      <td><div style="display:flex;gap:4px;align-items:center;"><input class="wh-input slip-qty-input" type="number" min="0.0001" step="any" required placeholder="${tl('الكمية')}" value="${qty}" style="min-width:70px;"><select class="wh-select slip-unit-sel" style="display:none;width:auto;min-width:70px;"></select><span class="slip-unit-lbl" style="font-size:12px;color:var(--ink-soft);white-space:nowrap;"></span></div></td>
       <td class="slip-exp-td"><input class="wh-input slip-exp-input" type="date" value="${expiry}"></td>
       <td style="text-align:center;"><button type="button" class="wh-icon-btn remove-row-btn" style="color:var(--dmg)">🗑</button></td>
     `;
@@ -1391,6 +1362,7 @@
       const mat = materials.find(m => m.code && m.code.toLowerCase() === codeInput.value.trim().toLowerCase());
       if(mat) {
         nameInput.value = mat.name;
+        refreshUnitField(tr, mat);
         refreshExpiryField(tr, mat);
       }
     }
@@ -1398,6 +1370,7 @@
       const mat = materials.find(m => m.name && m.name.toLowerCase() === nameInput.value.trim().toLowerCase());
       if(mat) {
         codeInput.value = mat.code;
+        refreshUnitField(tr, mat);
         refreshExpiryField(tr, mat);
       }
     }
@@ -1418,18 +1391,10 @@
     // عند تعبئة الصف مسبقاً (مثلاً أثناء تعديل حركة سابقة) نجهز حقل الاكسباير المناسب فوراً
     if(matCode || matName) {
       const mat = findMaterial(matCode) || findMaterial(matName);
-      if(mat) refreshExpiryField(tr, mat, expiry);
+      if(mat) { refreshUnitField(tr, mat, entryUnit); refreshExpiryField(tr, mat, expiry); }
     }
   }
 
-  const SUBS = { in: ['شراء من مورّد','إرجاع من الإنتاج','تسوية زيادة جرد'], out: ['صرف للإنتاج','بيع / تسليم','تالف / هالك','تسوية نقص جرد'] };
-  function setSub(type, sub, party) {
-    const sel = $('#txSub'), row = sel.closest('.wh-field');
-    row.style.display = SUBS[type] ? '' : 'none';
-    if (SUBS[type]) { sel.innerHTML = SUBS[type].concat(sub && !SUBS[type].includes(sub) ? [sub] : []).map(x => `<option value="${escapeHtml(x)}">${escapeHtml(tl(x))}</option>`).join(''); sel.value = sub || SUBS[type][0]; }
-    $('#txParty').value = party || '';
-    $('#lblParty').textContent = tl(type === 'in' ? 'المورّد' : 'الجهة المستلمة');
-  }
   function openTx(type) {
     $('#txType').value = type;
     $('#txEditId').value = '';
@@ -1437,7 +1402,7 @@
     $('#txStamp').textContent = type.toUpperCase();
     $('#txStamp').style.color = type === 'in' ? 'var(--in)' : 'var(--out)';
     $('#txDate').value = todayStr();
-    $('#txNotes').value = ''; setSub(type, '', '');
+    $('#txNotes').value = '';
     
     const tbody = $('#slipItemsBody');
     tbody.innerHTML = '';
@@ -1462,7 +1427,7 @@
     $('#txStamp').textContent = String(tx.type).toUpperCase();
     $('#txStamp').style.color = tx.type === 'in' ? 'var(--in)' : (tx.type === 'out' ? 'var(--out)' : 'var(--steel)');
     $('#txDate').value = tx.date || todayStr();
-    $('#txNotes').value = tx.notes || ''; setSub(tx.type, tx.sub, tx.party);
+    $('#txNotes').value = tx.notes || '';
 
     const tbody = $('#slipItemsBody');
     tbody.innerHTML = '';
@@ -1476,7 +1441,8 @@
         const code = mat ? mat.code : item.materialQuery;
         const name = mat ? mat.name : '';
         const exp = (item.expiryDate && item.expiryDate !== 'بدون اكسباير') ? item.expiryDate : '';
-        addSlipRow(code, name, item.qty, exp);
+        const eu = (mat && hasU2(mat) && item.entryUnit === mat.unit2) ? mat.unit2 : '';
+        addSlipRow(code, name, eu ? fromBase(mat, item.qty) : item.qty, exp, eu);
       });
     } else {
       addSlipRow();
@@ -1505,7 +1471,6 @@
       const type = $('#txType').value;
       const date = $('#txDate').value;
       const notes = $('#txNotes').value.trim();
-      const sub = SUBS[type] ? $('#txSub').value : '', party = $('#txParty').value.trim();
       const editId = $('#txEditId').value;
       const rows = $$('#slipItemsBody tr');
       let items = [];
@@ -1513,7 +1478,7 @@
       for(let tr of rows) {
         const codeVal = tr.querySelector('.slip-code-input').value.trim();
         const nameVal = tr.querySelector('.slip-name-input').value.trim();
-        const qty = Number(tr.querySelector('.slip-qty-input').value);
+        const enteredQty = Number(tr.querySelector('.slip-qty-input').value);
         const expiryDate = tr.querySelector('.slip-exp-input').value.trim();
 
         if(!codeVal && !nameVal) {
@@ -1527,21 +1492,27 @@
           return;
         }
 
+        const unitSel = tr.querySelector('.slip-unit-sel');
+        const entryUnit = (hasU2(mat) && unitSel && unitSel.value) ? unitSel.value : '';
+        const qty = toBase(mat, enteredQty, entryUnit);
+
         if(type === 'out') {
           const b = computeBalance(mat.name, editId || undefined);
-          if(qty > b.balance) {
+          if(qty > b.balance + 1e-9) {
             showToast(tl('الكمية المطلوبة للمادة ({0}) أكبر من المتاح في المخزن ({1})!', mat.name, b.balance), true);
             return;
           }
         }
 
-        items.push({ materialQuery: mat.code, qty, expiryDate: expiryDate || 'بدون اكسباير' });
+        const itm = { materialQuery: mat.code, qty, expiryDate: expiryDate || 'بدون اكسباير' };
+        if(entryUnit === mat.unit2) itm.entryUnit = entryUnit;
+        items.push(itm);
       }
 
       if(editId) {
         const idx = transactions.findIndex(x => String(x.id) === String(editId));
         if(idx > -1) {
-          transactions[idx] = { ...transactions[idx], type, items, date, notes, sub, party, updatedAt: Date.now() };
+          transactions[idx] = { ...transactions[idx], type, items, date, notes, updatedAt: Date.now() };
         }
         saveData('transactions', transactions);
         $('#txOverlay').classList.remove('open');
@@ -1550,7 +1521,7 @@
         showToast(tl('تم تحديث الوصل بنجاح'));
       } else {
         const nextSlipId = getNextSlipNumber();
-        transactions.push({ id: nextSlipId, type, items, date, notes, sub, party, createdAt: Date.now() });
+        transactions.push({ id: nextSlipId, type, items, date, notes, createdAt: Date.now() });
         saveData('transactions', transactions);
         $('#txOverlay').classList.remove('open');
         renderAll();
@@ -1782,12 +1753,18 @@
   renderAll();
   startCloud();
 
+  const _cb2 = $('#matHasUnit2'), _u2 = $('#matUnit2'), _nu2 = $('#matNewUnit2'), _nu1 = $('#matNewUnit');
+  if(_cb2) _cb2.onchange = updateUnit2Box;
+  if(_u2) _u2.onchange = () => { _nu2.style.display = _u2.value === NEW_UNIT_VALUE ? 'block' : 'none'; updateUnit2Box(); };
+  if(_nu2) _nu2.oninput = updateUnit2Box;
+  if(_nu1) _nu1.oninput = updateUnit2Box;
   const matUnitSel = $('#matUnit');
   if(matUnitSel) matUnitSel.onchange = () => {
     const ni = $('#matNewUnit');
     const isNew = matUnitSel.value === NEW_UNIT_VALUE;
     ni.style.display = isNew ? 'block' : 'none';
     if(isNew) ni.focus();
+    updateUnit2Box();
   };
   const matsCatFilter = $('#matsCategoryFilter');
   if(matsCatFilter) matsCatFilter.onchange = renderMats;
@@ -1798,94 +1775,6 @@
     try { localStorage.setItem(STORAGE_PREFIX + 'lang', lang); } catch(e){}
     applyLanguage();
   };
-
-  // ===== التقارير =====
-  const repState = { tab: 'mat', code: '', from: '', to: '', days: 60 };
-  const rpIso = d => d.toISOString().slice(0,10);
-  function rpRange(k){ const d = new Date(), p = n => String(n).padStart(2,'0');
-    if (k === 'month') return [d.getFullYear() + '-' + p(d.getMonth()+1) + '-01', rpIso(d)];
-    if (k === '30') return [rpIso(new Date(Date.now() - 30*864e5)), rpIso(d)];
-    if (k === 'year') return [d.getFullYear() + '-01-01', rpIso(d)];
-    return ['', ''];
-  }
-  function rpTable(head, rows){
-    return '<div style="overflow-x:auto"><table class="rp-tbl"><tr>' + head.map(h => `<th>${escapeHtml(tl(h))}</th>`).join('') + '</tr>'
-      + (rows.length ? rows.map(r => '<tr>' + r.map(c => (c && typeof c === 'object') ? `<td><a href="#" class="rp-link" data-slip="${escapeHtml(String(c.link))}">#${escapeHtml(String(c.link))} ↗</a></td>` : `<td>${escapeHtml(String(c))}</td>`).join('') + '</tr>').join('') : `<tr><td colspan="${head.length}" class="rp-empty">${tl('لا توجد بيانات')}</td></tr>`) + '</table></div>';
-  }
-  function gotoSlip(id){
-    $('#logSearch').value = String(id);
-    const m = $('#logFilterMonth'); if (m) m.value = '';
-    const ty = $('#logFilterType'); if (ty) ty.value = '';
-    const tab = $('.wh-tab[data-view="log"]'); if (tab) tab.click();
-    renderLog();
-    setTimeout(() => {
-      const b = document.querySelector('[data-edit-tx="' + String(id).replace(/"/g, '') + '"]'), tr = b && b.closest('tr');
-      if (tr) { tr.scrollIntoView({ behavior: 'smooth', block: 'center' }); tr.style.outline = '3px solid #E0992F'; tr.style.background = '#FFF3D6'; setTimeout(() => { tr.style.outline = ''; tr.style.background = ''; }, 4000); }
-    }, 120);
-  }
-  function renderReports(){
-    const box = $('#repBox'); if (!box) return; const S = repState;
-    const tabs = [['mat','حركة مادة'],['dead','مواد راكدة'],['party','حسب الجهة']];
-    let h = '<div class="rp-tabs">' + tabs.map(t => `<button type="button" class="rp-tab${S.tab === t[0] ? ' on' : ''}" data-rt="${t[0]}">${tl(t[1])}</button>`).join('') + '</div><div class="rp-card">';
-    let head = [], rows = [], csv = '';
-    const typeName = t => tl(t.type === 'in' ? 'إدخال' : t.type === 'out' ? 'إخراج' : 'افتتاحي') + (t.sub ? ' - ' + tl(t.sub) : '');
-    if (S.tab === 'mat') {
-      h += `<div class="rp-filters"><label>${tl('المادة (اكتب الكود أو الاسم)')}<input id="rpMat" list="rpMatList" value="${escapeHtml(S.code)}"></label><datalist id="rpMatList">${materials.map(m => `<option value="${escapeHtml(m.code)}">${escapeHtml(m.name)}</option>`).join('')}</datalist><label>${tl('من')}<input type="date" id="rpFrom" value="${S.from}"></label><label>${tl('إلى')}<input type="date" id="rpTo" value="${S.to}"></label></div>`
-        + '<div class="rp-chips">' + [['month','هذا الشهر'],['30','آخر 30 يوم'],['year','هذه السنة'],['all','الكل']].map(c => `<button type="button" data-chip="${c[0]}">${tl(c[1])}</button>`).join('') + '</div>';
-      const mat = findMaterial(S.code);
-      if (!mat) h += `<p class="rp-empty">${tl('اختر مادة صحيحة من القائمة')}</p>`;
-      else {
-        let tin = 0, tout = 0; head = ['التاريخ','رقم الوصل','النوع','الجهة','الكمية'];
-        transactions.slice().sort((a,b) => String(a.date).localeCompare(String(b.date))).forEach(t => { if ((S.from && t.date < S.from) || (S.to && t.date > S.to)) return;
-          (t.items || []).forEach(i => { if (i.materialQuery !== mat.code) return; const q = Number(i.qty) || 0; if (t.type === 'out') tout += q; else tin += q;
-            rows.push([t.date, { link: t.id }, typeName(t), t.party || '—', (t.type === 'out' ? '-' : '+') + fmtNum(q)]); }); });
-        h += `<div class="rp-sum"><div>${tl('الداخل')}<b style="color:var(--in)">${fmtNum(tin)}</b></div><div>${tl('الخارج')}<b style="color:var(--out)">${fmtNum(tout)}</b></div><div>${tl('الصافي')}<b>${fmtNum(tin - tout)}</b></div></div>`;
-        h += rows.length ? '' : `<p class="rp-empty">${tl('لا توجد حركات في هذه الفترة')}</p>`; csv = mat.code;
-      }
-    } else if (S.tab === 'dead') {
-      h += `<div class="rp-filters"><label>${tl('عدم الحركة لمدة')}<select id="rpDays">${[30,60,90,180].map(d => `<option value="${d}"${S.days === d ? ' selected' : ''}>${d} ${tl('يوم')}</option>`).join('')}</select></label></div>`;
-      const cutoff = rpIso(new Date(Date.now() - S.days*864e5)); head = ['الكود','اسم المادة','آخر حركة','الرصيد'];
-      materials.forEach(m => { let last = ''; transactions.forEach(t => { if ((t.items || []).some(i => i.materialQuery === m.code) && t.date > last) last = t.date; });
-        const bal = computeBalance(m.name).balance; if (bal > 0 && (!last || last < cutoff)) rows.push([m.code, m.name, last || '—', fmtNum(bal)]); });
-      if (!rows.length) h += `<p class="rp-empty">${tl('لا توجد مواد راكدة 👍')}</p>`; csv = 'idle';
-    } else {
-      head = ['الجهة','عدد الوصولات','إجمالي الداخل','إجمالي الخارج']; const P = {};
-      transactions.forEach(t => { if (!t.party) return; const p = P[t.party] = P[t.party] || { in: 0, out: 0, n: 0 }; p.n++; (t.items || []).forEach(i => { p[t.type === 'out' ? 'out' : 'in'] += Number(i.qty) || 0; }); });
-      rows = Object.keys(P).sort((a,b) => P[b].n - P[a].n).map(k => [k, P[k].n, fmtNum(P[k].in), fmtNum(P[k].out)]);
-      if (!rows.length) h += `<p class="rp-empty">${tl('لا توجد حركات بجهات مسجلة')}</p>`; csv = 'parties';
-    }
-    if (rows.length) h += rpTable(head, rows) + `<p style="margin-top:12px"><button type="button" class="rp-csv" id="rpCsv">⬇ ${tl('تنزيل CSV')}</button></p>`;
-    box.innerHTML = h + '</div>';
-    $$('[data-slip]').forEach(a => a.onclick = e => { e.preventDefault(); gotoSlip(a.dataset.slip); });
-    $$('[data-rt]').forEach(b => b.onclick = () => { S.tab = b.dataset.rt; renderReports(); });
-    $$('[data-chip]').forEach(b => b.onclick = () => { [S.from, S.to] = rpRange(b.dataset.chip); renderReports(); });
-    const bind = (id, fn) => { const el = $(id); if (el) el.onchange = () => { fn(el.value); renderReports(); }; };
-    bind('#rpMat', v => S.code = v.trim()); bind('#rpFrom', v => S.from = v); bind('#rpTo', v => S.to = v); bind('#rpDays', v => S.days = Number(v));
-    const c = $('#rpCsv'); if (c) c.onclick = () => { const q = v => '"' + String(v && typeof v === 'object' ? v.link : v).replace(/"/g, '""') + '"'; saveFile('\ufeff' + [head.map(x => tl(x))].concat(rows).map(r => r.map(q).join(',')).join('\n'), 'report_' + csv + '_' + todayStr() + '.csv'); };
-  }
-  { const rt = $('.wh-tab[data-view="reports"]'); if (rt) rt.addEventListener('click', renderReports); }
-
-  // ===== قراءة الباركود بالكاميرا =====
-  function scanBarcode(input){
-    if (!('BarcodeDetector' in window) || !navigator.mediaDevices) { showToast(tl('المتصفح لا يدعم قراءة الباركود. استخدم Chrome على أندرويد.'), true); return; }
-    const ov = document.createElement('div'); ov.style.cssText = 'position:fixed;inset:0;background:#000;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center';
-    ov.innerHTML = '<video playsinline muted style="width:100%;max-height:80%"></video><button type="button" style="margin:14px;padding:12px 24px;border-radius:8px;border:none;font-size:16px">' + tl('إغلاق') + '</button>';
-    document.body.appendChild(ov);
-    const video = ov.querySelector('video'); let stream, timer;
-    const stop = () => { clearInterval(timer); if (stream) stream.getTracks().forEach(t => t.stop()); ov.remove(); };
-    ov.querySelector('button').onclick = stop;
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }).then(st => { stream = st; video.srcObject = st; video.play();
-      const det = new BarcodeDetector(); timer = setInterval(async () => { try { const r = await det.detect(video); if (r.length) { input.value = r[0].rawValue; ['input','change','blur'].forEach(ev => input.dispatchEvent(new Event(ev, { bubbles: true }))); stop(); } } catch(e){} }, 300); })
-      .catch(() => { showToast(tl('تعذّر فتح الكاميرا'), true); stop(); });
-  }
-  { const body = $('#slipItemsBody'); if (body) new MutationObserver(() => { body.querySelectorAll('.slip-code-input').forEach(inp => { if (inp.dataset.scan) return; inp.dataset.scan = 1;
-      const b = document.createElement('button'); b.type = 'button'; b.textContent = '📷'; b.style.cssText = 'margin-inline-start:4px;border:1px solid #DDD3BC;background:#fff;border-radius:6px;cursor:pointer'; b.onclick = () => scanBarcode(inp); inp.after(b); }); }).observe(body, { childList: true }); }
-
-  // ===== تثبيت على الهاتف =====
-  try { const svg = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#33454C"/><text x="50" y="68" font-size="56" text-anchor="middle">📦</text></svg>');
-    const man = { name: 'نظام إدارة المخزن', short_name: 'المخزن', start_url: location.href.split('#')[0], display: 'standalone', background_color: '#F3EFE4', theme_color: '#33454C', dir: 'rtl', lang: 'ar', icons: [{ src: svg, sizes: 'any', type: 'image/svg+xml' }] };
-    const l = document.createElement('link'); l.rel = 'manifest'; l.href = URL.createObjectURL(new Blob([JSON.stringify(man)], { type: 'application/manifest+json' })); document.head.appendChild(l);
-    ['<meta name="theme-color" content="#33454C">','<meta name="apple-mobile-web-app-capable" content="yes">','<meta name="mobile-web-app-capable" content="yes">'].forEach(h => document.head.insertAdjacentHTML('beforeend', h)); } catch(e){}
   applyLanguage();
 
 })();
