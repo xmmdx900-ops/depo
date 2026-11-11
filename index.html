@@ -350,21 +350,6 @@
           <select class="wh-select" id="matUnit"></select>
           <input class="wh-input" id="matNewUnit" placeholder="اكتب الوحدة الجديدة..." style="display:none; margin-top:6px;">
         </div>
-        <div class="wh-field full">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="matHasUnit2" style="width:auto;margin:0;"> <span>إضافة وحدة ثانية مرتبطة بالوحدة الأساسية</span></label>
-          <div id="matUnit2Box" style="display:none; margin-top:8px; padding:12px; border:1px dashed var(--line); border-radius:10px; background:var(--bg);">
-            <label>الوحدة الثانية</label>
-            <select class="wh-select" id="matUnit2"></select>
-            <input class="wh-input" id="matNewUnit2" placeholder="اكتب الوحدة الجديدة..." style="display:none; margin-top:6px;">
-            <div style="margin-top:10px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-weight:700;">
-              <span>1</span><span id="matBaseLbl" style="color:var(--amber-dark)">—</span>
-              <span>=</span>
-              <input class="wh-input" type="number" min="0" step="any" id="matFactor" style="width:120px;" placeholder="20">
-              <span id="matUnit2Lbl" style="color:var(--amber-dark)">—</span>
-            </div>
-            <div style="font-size:12px; color:var(--ink-soft); margin-top:6px;">اكتب كم تساوي الوحدة الأساسية الواحدة بالوحدة الثانية (مثال: 1 كغم = 20 متر).</div>
-          </div>
-        </div>
         <div class="wh-field"><label>الحد الأدنى للمخزون</label><input class="wh-input" type="number" min="0" id="matMinStock"></div>
         <div class="wh-field full"><label>ملاحظات عامة</label><input class="wh-input" id="matNotes"></div>
         <div class="wh-form-actions">
@@ -489,41 +474,6 @@
 
   function allUnits() { return DEFAULT_UNITS.concat(customUnits); }
 
-  // ===== الوحدة الثانية: الكميات تُخزَّن دائماً بالوحدة الأساسية، والوحدة الثانية للإدخال والعرض فقط =====
-  function r6(n){ return Math.round(Number(n) * 1e6) / 1e6; }
-  function hasU2(m){ return !!(m && m.unit2 && Number(m.factor) > 0); }
-  function toBase(m, qty, unit){ return (hasU2(m) && unit === m.unit2) ? r6(Number(qty) / Number(m.factor)) : Number(qty); }
-  function fromBase(m, qty){ return r6(Number(qty) * Number(m.factor)); }
-  function u2Text(m, qty){ return hasU2(m) ? ` (= ${fmtNum(fromBase(m, qty))} ${escapeHtml(tl(m.unit2))})` : ''; }
-
-  function populateUnit2(selected) {
-    const sel = $('#matUnit2'); if(!sel) return;
-    const ni = $('#matNewUnit2');
-    const cur = (selected !== undefined && selected !== null) ? selected : sel.value;
-    const newTxt = ni ? ni.value : '';
-    sel.innerHTML = allUnits().map(u => `<option value="${escapeHtml(u)}">${escapeHtml(tl(u))}</option>`).join('')
-      + `<option value="${NEW_UNIT_VALUE}">${escapeHtml(tl('＋ إضافة وحدة جديدة...'))}</option>`;
-    const ok = cur === NEW_UNIT_VALUE || allUnits().includes(cur);
-    sel.value = ok ? cur : (allUnits().find(u => u !== $('#matUnit').value) || DEFAULT_UNITS[0]);
-    if(ni) { ni.value = sel.value === NEW_UNIT_VALUE ? newTxt : ''; ni.style.display = sel.value === NEW_UNIT_VALUE ? 'block' : 'none'; }
-    updateUnit2Box();
-  }
-  function selectedUnit1() {
-    const v = $('#matUnit').value;
-    return v === NEW_UNIT_VALUE ? ($('#matNewUnit').value.trim() || '—') : v;
-  }
-  function selectedUnit2() {
-    const v = $('#matUnit2').value;
-    return v === NEW_UNIT_VALUE ? ($('#matNewUnit2').value.trim() || '—') : v;
-  }
-  function updateUnit2Box() {
-    const cb = $('#matHasUnit2'), box = $('#matUnit2Box');
-    if(!cb || !box) return;
-    box.style.display = cb.checked ? 'block' : 'none';
-    $('#matBaseLbl').textContent = tl(selectedUnit1());
-    $('#matUnit2Lbl').textContent = tl(selectedUnit2());
-  }
-
   function ensureUnit(u) {
     u = (u||'').trim();
     if(!u || allUnits().includes(u)) return;
@@ -539,7 +489,6 @@
     sel.value = (selected && allUnits().includes(selected)) ? selected : DEFAULT_UNITS[0];
     const ni = $('#matNewUnit');
     if(ni) { ni.value = ''; ni.style.display = 'none'; }
-    populateUnit2();
   }
 
   // تحويل الفئات القديمة (نص حر) إلى الفئتين المعتمدتين مع الحفاظ على النص القديم في الملاحظات
@@ -562,7 +511,7 @@
   // ===== اللغات: العربية / الكردية (سوراني) / الإنجليزية =====
   const LANGS = ['ar','ckb','en'];
   const NORM = (x) => String(x).replace(/[\u064B-\u0652\uFE0F]/g, '');
-  const I18N_RAW = {"نظام إدارة مخزن المواد الأولية": ["Raw Materials Warehouse Management System", "سیستەمی بەڕێوەبردنی کۆگای مادە خاوەکان"], "نظام إدارة المخزون": ["Inventory Management System", "سیستەمی بەڕێوەبردنی کۆگا"], "مخزن المواد الأولية": ["Raw Materials Warehouse", "کۆگای مادە خاوەکان"], "↧ إدخال": ["↧ In", "↧ داخڵکردن"], "↥ إخراج": ["↥ Out", "↥ دەرکردن"], "⬇ حفظ نسخة على جهازي": ["⬇ Save a backup to my device", "⬇ پاشەکەوتکردنی کۆپییەک لەسەر ئامێرەکەم"], "⬆ استرجاع نسخة من جهازي": ["⬆ Restore a backup from my device", "⬆ گەڕاندنەوەی کۆپییەک لە ئامێرەکەمەوە"], "تُحفظ بياناتك تلقائياً داخل هذا المتصفح على هذا الجهاز.": ["Your data is saved automatically inside this browser on this device.", "داتاکانت بە شێوەی خۆکار لەم وێبگەڕە و لەم ئامێرەدا پاشەکەوت دەکرێن."], "لوحة الجرد": ["Inventory Dashboard", "تەختەی جەرد"], "سجل الحركات": ["Transaction Log", "تۆماری جووڵەکان"], "بيانات المواد والأكواد": ["Materials & Codes", "زانیاری مادە و کۆدەکان"], "إعدادات المخزن والشركة": ["Warehouse & Company Settings", "ڕێکخستنەکانی کۆگا و کۆمپانیا"], "⚠️ تنبيه: المواد الأولية التالية متبقٍّ على انتهاء صلاحيتها شهر واحد أو أقل!": ["⚠️ Warning: the following materials expire within one month or less!", "⚠️ ئاگاداری: ئەم مادانەی خوارەوە یەک مانگ یان کەمتریان ماوە بۆ بەسەرچوونیان!"], "تنبيه: المواد الأولية التالية وصلت للحد الأدنى من المخزون أو أقل!": ["Warning: the following materials have reached the minimum stock level or lower!", "ئاگاداری: ئەم مادانەی خوارەوە گەیشتوونەتە کەمترین ڕادەی کۆگا یان کەمترن!"], "عدد المواد المسجّلة": ["Registered materials", "ژمارەی مادە تۆمارکراوەکان"], "إجمالي الحركات الكلية": ["Total transactions", "کۆی گشتی جووڵەکان"], "مواد تحت الحد الأدنى": ["Materials below minimum", "مادەکانی خوار کەمترین ڕادە"], "ابحث بالكود أو اسم المادة...": ["Search by code or material name...", "بگەڕێ بە کۆد یان ناوی مادە..."], "كل الفئات": ["All categories", "هەموو پۆلەکان"], "مادة أولية": ["Raw material", "مادەی خاو"], "مادة جاهزة": ["Finished material", "مادەی ئامادە"], "⬇ تصدير التقرير Excel": ["⬇ Export report to Excel", "⬇ هەناردەکردنی ڕاپۆرت بۆ Excel"], "ابحث برقم الوصل، الكود، اسم المادة، أو التاريخ...": ["Search by slip number, code, material name, or date...", "بگەڕێ بە ژمارەی وەسڵ، کۆد، ناوی مادە، یان بەروار..."], "كل الأنواع": ["All types", "هەموو جۆرەکان"], "إدخال مواد": ["Materials in", "داخڵکردنی مادە"], "إخراج مواد": ["Materials out", "دەرکردنی مادە"], "رصيد افتتاحي": ["Opening balance", "هاوسەنگی سەرەتایی"], "كل الأشهر": ["All months", "هەموو مانگەکان"], "إضافة / تعديل مادة أولية مع كود الصنف": ["Add / edit a material with item code", "زیادکردن / دەستکاریکردنی مادە لەگەڵ کۆدی جۆر"], "كود المادة (Barcode / Code) *": ["Material code (Barcode / Code) *", "کۆدی مادە (Barcode / Code) *"], "اسم المادة الأولية *": ["Material name *", "ناوی مادە *"], "الفئة": ["Category", "پۆل"], "وحدة القياس": ["Unit of measure", "یەکەی پێوان"], "الحد الأدنى للمخزون": ["Minimum stock level", "کەمترین ڕادەی کۆگا"], "ملاحظات عامة": ["General notes", "تێبینی گشتی"], "مثال: MAT-001": ["Example: MAT-001", "نموونە: MAT-001"], "اسم المادة...": ["Material name...", "ناوی مادە..."], "اكتب الوحدة الجديدة...": ["Type the new unit...", "یەکەی نوێ بنووسە..."], "＋ إضافة وحدة جديدة...": ["＋ Add new unit...", "＋ زیادکردنی یەکەی نوێ..."], "حفظ المادة": ["Save material", "پاشەکەوتکردنی مادە"], "تحديث المادة": ["Update material", "نوێکردنەوەی مادە"], "إلغاء التعديل": ["Cancel editing", "هەڵوەشاندنەوەی دەستکاری"], "قائمة المواد المسجلة": ["Registered materials list", "لیستی مادە تۆمارکراوەکان"], "⚙️ إعدادات اسم المخزن ومعلومات المنشأة": ["⚙️ Warehouse name and facility information", "⚙️ ڕێکخستنەکانی ناوی کۆگا و زانیاری دامەزراوە"], "اسم المخزن أو المعمل *": ["Warehouse or factory name *", "ناوی کۆگا یان کارگە *"], "اسم الشركة / المؤسسة": ["Company / organization name", "ناوی کۆمپانیا / دامەزراوە"], "عنوان الموقع": ["Location address", "ناونیشانی شوێن"], "رقم الهاتف / التواصل": ["Phone / contact number", "ژمارەی تەلەفۆن / پەیوەندی"], "حفظ الإعدادات العامة": ["Save general settings", "پاشەکەوتکردنی ڕێکخستنە گشتییەکان"], "♻️ تصفير وإغلاق السنة المخزنية": ["♻️ Reset and close the inventory year", "♻️ سفرکردنەوە و داخستنی ساڵی کۆگا"], "إغلاق السنة ونقل الأرصدة الافتتاحية": ["Close the year and carry over opening balances", "داخستنی ساڵ و گواستنەوەی هاوسەنگییە سەرەتاییەکان"], "يقوم النظام بحذف سجل الحركات الحالي بالكامل لتسريع البرنامج، مع نقل جرد المواد الحالي وكمياتها لتصبح هي الرصيد الافتتاحي للعام الجديد.": ["The system deletes the entire current transaction log to speed up the program, and carries over the current inventory and quantities to become the opening balance of the new year.", "سیستەمەکە تۆماری جووڵەکانی ئێستا بە تەواوی دەسڕێتەوە بۆ خێراکردنی بەرنامەکە، و جەردی ئێستای مادەکان و بڕەکانیان دەگوازێتەوە بۆ ئەوەی ببێتە هاوسەنگی سەرەتایی ساڵی نوێ."], "تصفير وبدء سنة جديدة": ["Reset and start a new year", "سفرکردنەوە و دەستپێکردنی ساڵێکی نوێ"], "إذن حركة مواد": ["Material movement slip", "وەسڵی جووڵەی مادە"], "تاريخ الحركة *": ["Transaction date *", "بەرواری جووڵە *"], "ملاحظات عامة للوصل *": ["General notes for the slip *", "تێبینی گشتی بۆ وەسڵ *"], "سبب الإدخال أو الإخراج...": ["Reason for in or out...", "هۆکاری داخڵکردن یان دەرکردن..."], "المواد المشمولة في هذا الوصل:": ["Materials included in this slip:", "ئەو مادانەی لەم وەسڵەدا هەن:"], "+ إضافة مادة للوصل": ["+ Add material to slip", "+ زیادکردنی مادە بۆ وەسڵ"], "كود المادة": ["Material code", "کۆدی مادە"], "اسم المادة": ["Material name", "ناوی مادە"], "الكمية": ["Quantity", "بڕ"], "الاكسباير": ["Expiry", "بەسەرچوون"], "حذف": ["Delete", "سڕینەوە"], "اعتماد وحفظ الوصل": ["Approve and save slip", "پەسەندکردن و پاشەکەوتکردنی وەسڵ"], "إلغاء": ["Cancel", "هەڵوەشاندنەوە"], "كود المادة...": ["Material code...", "کۆدی مادە..."], "تاريخ الاكسباير": ["Expiry date", "بەرواری بەسەرچوون"], "الوجبة / الاكسباير": ["Batch / Expiry", "بەتش / بەسەرچوون"], "بدون اكسباير": ["No expiry", "بێ بەرواری بەسەرچوون"], "إذن إدخال مواد أولية": ["Materials In Slip", "وەسڵی داخڵکردنی مادە"], "إذن إخراج مواد أولية": ["Materials Out Slip", "وەسڵی دەرکردنی مادە"], "تعديل إذن إدخال مواد أولية": ["Edit Materials In Slip", "دەستکاریکردنی وەسڵی داخڵکردنی مادە"], "تعديل إذن إخراج مواد أولية": ["Edit Materials Out Slip", "دەستکاریکردنی وەسڵی دەرکردنی مادە"], "تعديل رصيد افتتاحي": ["Edit opening balance", "دەستکاریکردنی هاوسەنگی سەرەتایی"], "رصيد افتتاحي مرحّل": ["Carried-over opening balance", "هاوسەنگی سەرەتایی گوازراوە"], "رصيد افتتاحي مرحّل من العام السابق": ["Opening balance carried over from the previous year", "هاوسەنگی سەرەتایی گوازراوە لە ساڵی ڕابردوو"], "الحالة": ["Status", "دۆخ"], "الوحدة": ["Unit", "یەکە"], "الكمية الحالية الإجمالية": ["Total current quantity", "کۆی بڕی ئێستا"], "اسم المادة الأولية": ["Material name", "ناوی مادە"], "الحد الأدنى": ["Minimum", "کەمترین ڕادە"], "إجراء": ["Action", "کردار"], "تحت الحد الأدنى": ["Below minimum", "خوار کەمترین ڕادە"], "جيد": ["Good", "باش"], "لا توجد مواد أولية تطابق بحثك.": ["No materials match your search.", "هیچ مادەیەک نییە لەگەڵ گەڕانەکەت بگونجێت."], "(المتبقي: {0} / الحد: {1})": ["(Remaining: {0} / Limit: {1})", "(ماوە: {0} / کەمترین ڕادە: {1})"], "(وجبة: {0} | متبقي: {1} يوم)": ["(Batch: {0} | {1} days left)", "(بەتش: {0} | {1} ڕۆژ ماوە)"], "(وجبة: {0} | منتهية الصلاحية!)": ["(Batch: {0} | Expired!)", "(بەتش: {0} | بەسەرچووە!)"], "الوجبات:": ["Batches:", "بەتشەکان:"], "لا توجد وجبات نشطة": ["No active batches", "هیچ بەتشێکی چالاک نییە"], "(متاح: {0})": ["(Available: {0})", "(بەردەست: {0})"], "سجل الحركات فارغ لهذا التحديد.": ["The transaction log is empty for this selection.", "تۆماری جووڵەکان بۆ ئەم هەڵبژاردنە بەتاڵە."], "رقم الوصل": ["Slip No.", "ژمارەی وەسڵ"], "التاريخ": ["Date", "بەروار"], "النوع": ["Type", "جۆر"], "المواد والكميات": ["Materials & quantities", "مادە و بڕەکان"], "ملاحظات الوصل": ["Slip notes", "تێبینییەکانی وەسڵ"], "اكسباير:": ["Expiry:", "بەسەرچوون:"], "إدخال": ["In", "داخڵکردن"], "افتتاحي": ["Opening", "سەرەتایی"], "إخراج": ["Out", "دەرکردن"], "تعديل الحركة": ["Edit transaction", "دەستکاریکردنی جووڵە"], "طباعة الوصل": ["Print slip", "چاپکردنی وەسڵ"], "لا توجد مواد أولية مسجلة.": ["No materials registered.", "هیچ مادەیەک تۆمار نەکراوە."], "لا توجد مواد مسجلة.": ["No materials registered.", "هیچ مادەیەک تۆمار نەکراوە."], "حذف هذا الوصل بالكامل؟": ["Delete this slip entirely?", "ئەم وەسڵە بە تەواوی بسڕدرێتەوە؟"], "حذف المادة الأولية؟": ["Delete this material?", "مادەکە بسڕدرێتەوە؟"], "تم الحذف بنجاح": ["Deleted successfully", "بە سەرکەوتوویی سڕایەوە"], "تم الحذف": ["Deleted", "سڕایەوە"], "كود المادة مستخدم مسبقاً!": ["This material code is already in use!", "کۆدی مادە پێشتر بەکارهاتووە!"], "تم الحفظ بنجاح": ["Saved successfully", "بە سەرکەوتوویی پاشەکەوت کرا"], "اكتب اسم الوحدة الجديدة أولاً": ["Type the new unit name first", "سەرەتا ناوی یەکەی نوێ بنووسە"], "يجب أن يحتوي الوصل على مادة واحدة على الأقل": ["The slip must contain at least one material", "پێویستە وەسڵەکە لانیکەم یەک مادەی تێدا بێت"], "يرجى تحديد كود المادة أو اسمها لكل صف": ["Please specify the material code or name for every row", "تکایە کۆد یان ناوی مادە بۆ هەر ڕیزێک دیاری بکە"], "المادة غير مسجلة أو الكود خاطئ: \"{0}\"": ["Material not registered or wrong code: \"{0}\"", "مادەکە تۆمار نەکراوە یان کۆدەکە هەڵەیە: \"{0}\""], "الكمية المطلوبة للمادة ({0}) أكبر من المتاح في المخزن ({1})!": ["The requested quantity for ({0}) exceeds the available stock ({1})!", "بڕی داواکراو بۆ مادەی ({0}) زیاترە لەوەی لە کۆگادا هەیە ({1})!"], "تم تحديث الوصل بنجاح": ["Slip updated successfully", "وەسڵەکە بە سەرکەوتوویی نوێکرایەوە"], "تم تسجيل وإصدار الوصل بنجاح": ["Slip recorded and issued successfully", "وەسڵەکە بە سەرکەوتوویی تۆمار کرا و دەرچوو"], "تم حفظ إعدادات المخزن بنجاح": ["Warehouse settings saved successfully", "ڕێکخستنەکانی کۆگا بە سەرکەوتوویی پاشەکەوت کران"], "تم تحميل ملف النسخة الاحتياطية": ["Backup file downloaded", "فایلی کۆپی پاشەکەوت داگیرا"], "تم استعادة البيانات بنجاح": ["Data restored successfully", "داتاکان بە سەرکەوتوویی گەڕێندرانەوە"], "الملف غير متوافق!": ["Incompatible file!", "فایلەکە گونجاو نییە!"], "ملف غير صالح!": ["Invalid file!", "فایلێکی نادروستە!"], "تم إلغاء التصفير": ["Reset cancelled", "سفرکردنەوە هەڵوەشێندرایەوە"], "المخزن فارغ مسبقاً!": ["The warehouse is already empty!", "کۆگا پێشتر بەتاڵە!"], "المخزن فارغ، لا توجد بيانات لتصديرها!": ["The warehouse is empty, no data to export!", "کۆگا بەتاڵە، هیچ داتایەک نییە بۆ هەناردەکردن!"], "تم تصدير تقرير Excel بنجاح 📊": ["Excel report exported successfully 📊", "ڕاپۆرتی Excel بە سەرکەوتوویی هەناردە کرا 📊"], "حدث خطأ أثناء التصدير!": ["An error occurred during export!", "هەڵەیەک ڕوویدا لە کاتی هەناردەکردندا!"], "تصفير": ["RESET", "سفرکردنەوە"], "أنت تطلب تصفير الحركات وبدء سنة مالية جديدة.\nسيقوم النظام بنقل الجرد الحالي كأرصدة افتتاحية.\n\nلتأكيد التصفير، اكتب كلمة (تصفير):": ["You are requesting to reset all transactions and start a new financial year.\nThe system will carry the current inventory over as opening balances.\n\nTo confirm, type the word (RESET):", "داوای سفرکردنەوەی جووڵەکان و دەستپێکردنی ساڵێکی دارایی نوێ دەکەیت.\nسیستەمەکە جەردی ئێستا دەگوازێتەوە وەک هاوسەنگی سەرەتایی.\n\nبۆ دڵنیابوونەوە لە سفرکردنەوە، ووشەی (سفرکردنەوە) بنووسە:"], "تم تصفير المخازن ونقل الأرصدة الافتتاحية للسنة الجديدة بنجاح!": ["The warehouse was reset and opening balances were carried over to the new year successfully!", "کۆگاکان سفر کرانەوە و هاوسەنگییە سەرەتاییەکان بۆ ساڵی نوێ بە سەرکەوتوویی گوازرانەوە!"], "إذن مخزني - رقم": ["Warehouse slip - No.", "وەسڵی کۆگا - ژمارە"], "العنوان: ": ["Address: ", "ناونیشان: "], "هاتف: ": ["Phone: ", "تەلەفۆن: "], "رقم الوصل:": ["Slip No.:", "ژمارەی وەسڵ:"], "تاريخ الحركة:": ["Transaction date:", "بەرواری جووڵە:"], "م": ["#", "ژ"], "كود الصنف": ["Item code", "کۆدی جۆر"], "ملاحظات الوصل:": ["Slip notes:", "تێبینییەکانی وەسڵ:"], "لا توجد ملاحظات": ["No notes", "هیچ تێبینییەک نییە"], "أمين المخزن": ["Storekeeper", "کۆگادار"], "المستلم / المعتمد": ["Receiver / Approver", "وەرگر / پەسەندکەر"], "جرد المواد الأولية": ["Materials Inventory", "جەردی مادەکان"], "تقرير جرد المواد والكميات الحالية": ["Materials and current quantities inventory report", "ڕاپۆرتی جەردی مادە و بڕە ئێستاکان"], "تاريخ الجرد: {0}": ["Inventory date: {0}", "بەرواری جەرد: {0}"], "الوجبات (الاكسباير)": ["Batches (Expiry)", "بەتشەکان (بەسەرچوون)"], "تقرير_المخزن": ["Warehouse_Report", "ڕاپۆرتی_کۆگا"], "قطعة": ["Piece", "دانە"], "كرتون": ["Carton", "کارتۆن"], "برميل": ["Barrel", "بەرمیل"], "كغم": ["Kg", "کگم"], "لتر": ["Liter", "لیتر"], "متر": ["Meter", "مەتر"], "إضافة وحدة ثانية مرتبطة بالوحدة الأساسية": ["Add a second unit linked to the base unit", "زیادکردنی یەکەی دووەم کە بەستراوەتەوە بە یەکەی بنەڕەتی"], "الوحدة الثانية": ["Second unit", "یەکەی دووەم"], "اكتب كم تساوي الوحدة الأساسية الواحدة بالوحدة الثانية (مثال: 1 كغم = 20 متر).": ["Enter how many second units equal one base unit (e.g. 1 kg = 20 m).", "بنووسە یەک یەکەی بنەڕەتی دەکاتە چەند یەکەی دووەم (نموونە: 1 کگم = 20 مەتر)."], "الرصيد:": ["Balance:", "ماوە:"], "اكتب الوحدة الثانية والمعامل (أكبر من صفر)": ["Enter the second unit and a factor greater than zero", "یەکەی دووەم و ژمارەی گۆڕین (گەورەتر لە سفر) بنووسە"], "الوحدة الثانية يجب أن تختلف عن الأساسية": ["The second unit must differ from the base unit", "یەکەی دووەم دەبێت جیاواز بێت لە یەکەی بنەڕەتی"]};
+  const I18N_RAW = {"نظام إدارة مخزن المواد الأولية": ["Raw Materials Warehouse Management System", "سیستەمی بەڕێوەبردنی کۆگای مادە خاوەکان"], "نظام إدارة المخزون": ["Inventory Management System", "سیستەمی بەڕێوەبردنی کۆگا"], "مخزن المواد الأولية": ["Raw Materials Warehouse", "کۆگای مادە خاوەکان"], "↧ إدخال": ["↧ In", "↧ داخڵکردن"], "↥ إخراج": ["↥ Out", "↥ دەرکردن"], "⬇ حفظ نسخة على جهازي": ["⬇ Save a backup to my device", "⬇ پاشەکەوتکردنی کۆپییەک لەسەر ئامێرەکەم"], "⬆ استرجاع نسخة من جهازي": ["⬆ Restore a backup from my device", "⬆ گەڕاندنەوەی کۆپییەک لە ئامێرەکەمەوە"], "تُحفظ بياناتك تلقائياً داخل هذا المتصفح على هذا الجهاز.": ["Your data is saved automatically inside this browser on this device.", "داتاکانت بە شێوەی خۆکار لەم وێبگەڕە و لەم ئامێرەدا پاشەکەوت دەکرێن."], "لوحة الجرد": ["Inventory Dashboard", "تەختەی جەرد"], "سجل الحركات": ["Transaction Log", "تۆماری جووڵەکان"], "بيانات المواد والأكواد": ["Materials & Codes", "زانیاری مادە و کۆدەکان"], "إعدادات المخزن والشركة": ["Warehouse & Company Settings", "ڕێکخستنەکانی کۆگا و کۆمپانیا"], "⚠️ تنبيه: المواد الأولية التالية متبقٍّ على انتهاء صلاحيتها شهر واحد أو أقل!": ["⚠️ Warning: the following materials expire within one month or less!", "⚠️ ئاگاداری: ئەم مادانەی خوارەوە یەک مانگ یان کەمتریان ماوە بۆ بەسەرچوونیان!"], "تنبيه: المواد الأولية التالية وصلت للحد الأدنى من المخزون أو أقل!": ["Warning: the following materials have reached the minimum stock level or lower!", "ئاگاداری: ئەم مادانەی خوارەوە گەیشتوونەتە کەمترین ڕادەی کۆگا یان کەمترن!"], "عدد المواد المسجّلة": ["Registered materials", "ژمارەی مادە تۆمارکراوەکان"], "إجمالي الحركات الكلية": ["Total transactions", "کۆی گشتی جووڵەکان"], "مواد تحت الحد الأدنى": ["Materials below minimum", "مادەکانی خوار کەمترین ڕادە"], "ابحث بالكود أو اسم المادة...": ["Search by code or material name...", "بگەڕێ بە کۆد یان ناوی مادە..."], "كل الفئات": ["All categories", "هەموو پۆلەکان"], "مادة أولية": ["Raw material", "مادەی خاو"], "مادة جاهزة": ["Finished material", "مادەی ئامادە"], "⬇ تصدير التقرير Excel": ["⬇ Export report to Excel", "⬇ هەناردەکردنی ڕاپۆرت بۆ Excel"], "ابحث برقم الوصل، الكود، اسم المادة، أو التاريخ...": ["Search by slip number, code, material name, or date...", "بگەڕێ بە ژمارەی وەسڵ، کۆد، ناوی مادە، یان بەروار..."], "كل الأنواع": ["All types", "هەموو جۆرەکان"], "إدخال مواد": ["Materials in", "داخڵکردنی مادە"], "إخراج مواد": ["Materials out", "دەرکردنی مادە"], "رصيد افتتاحي": ["Opening balance", "هاوسەنگی سەرەتایی"], "كل الأشهر": ["All months", "هەموو مانگەکان"], "إضافة / تعديل مادة أولية مع كود الصنف": ["Add / edit a material with item code", "زیادکردن / دەستکاریکردنی مادە لەگەڵ کۆدی جۆر"], "كود المادة (Barcode / Code) *": ["Material code (Barcode / Code) *", "کۆدی مادە (Barcode / Code) *"], "اسم المادة الأولية *": ["Material name *", "ناوی مادە *"], "الفئة": ["Category", "پۆل"], "وحدة القياس": ["Unit of measure", "یەکەی پێوان"], "الحد الأدنى للمخزون": ["Minimum stock level", "کەمترین ڕادەی کۆگا"], "ملاحظات عامة": ["General notes", "تێبینی گشتی"], "مثال: MAT-001": ["Example: MAT-001", "نموونە: MAT-001"], "اسم المادة...": ["Material name...", "ناوی مادە..."], "اكتب الوحدة الجديدة...": ["Type the new unit...", "یەکەی نوێ بنووسە..."], "＋ إضافة وحدة جديدة...": ["＋ Add new unit...", "＋ زیادکردنی یەکەی نوێ..."], "حفظ المادة": ["Save material", "پاشەکەوتکردنی مادە"], "تحديث المادة": ["Update material", "نوێکردنەوەی مادە"], "إلغاء التعديل": ["Cancel editing", "هەڵوەشاندنەوەی دەستکاری"], "قائمة المواد المسجلة": ["Registered materials list", "لیستی مادە تۆمارکراوەکان"], "⚙️ إعدادات اسم المخزن ومعلومات المنشأة": ["⚙️ Warehouse name and facility information", "⚙️ ڕێکخستنەکانی ناوی کۆگا و زانیاری دامەزراوە"], "اسم المخزن أو المعمل *": ["Warehouse or factory name *", "ناوی کۆگا یان کارگە *"], "اسم الشركة / المؤسسة": ["Company / organization name", "ناوی کۆمپانیا / دامەزراوە"], "عنوان الموقع": ["Location address", "ناونیشانی شوێن"], "رقم الهاتف / التواصل": ["Phone / contact number", "ژمارەی تەلەفۆن / پەیوەندی"], "حفظ الإعدادات العامة": ["Save general settings", "پاشەکەوتکردنی ڕێکخستنە گشتییەکان"], "♻️ تصفير وإغلاق السنة المخزنية": ["♻️ Reset and close the inventory year", "♻️ سفرکردنەوە و داخستنی ساڵی کۆگا"], "إغلاق السنة ونقل الأرصدة الافتتاحية": ["Close the year and carry over opening balances", "داخستنی ساڵ و گواستنەوەی هاوسەنگییە سەرەتاییەکان"], "يقوم النظام بحذف سجل الحركات الحالي بالكامل لتسريع البرنامج، مع نقل جرد المواد الحالي وكمياتها لتصبح هي الرصيد الافتتاحي للعام الجديد.": ["The system deletes the entire current transaction log to speed up the program, and carries over the current inventory and quantities to become the opening balance of the new year.", "سیستەمەکە تۆماری جووڵەکانی ئێستا بە تەواوی دەسڕێتەوە بۆ خێراکردنی بەرنامەکە، و جەردی ئێستای مادەکان و بڕەکانیان دەگوازێتەوە بۆ ئەوەی ببێتە هاوسەنگی سەرەتایی ساڵی نوێ."], "تصفير وبدء سنة جديدة": ["Reset and start a new year", "سفرکردنەوە و دەستپێکردنی ساڵێکی نوێ"], "إذن حركة مواد": ["Material movement slip", "وەسڵی جووڵەی مادە"], "تاريخ الحركة *": ["Transaction date *", "بەرواری جووڵە *"], "ملاحظات عامة للوصل *": ["General notes for the slip *", "تێبینی گشتی بۆ وەسڵ *"], "سبب الإدخال أو الإخراج...": ["Reason for in or out...", "هۆکاری داخڵکردن یان دەرکردن..."], "المواد المشمولة في هذا الوصل:": ["Materials included in this slip:", "ئەو مادانەی لەم وەسڵەدا هەن:"], "+ إضافة مادة للوصل": ["+ Add material to slip", "+ زیادکردنی مادە بۆ وەسڵ"], "كود المادة": ["Material code", "کۆدی مادە"], "اسم المادة": ["Material name", "ناوی مادە"], "الكمية": ["Quantity", "بڕ"], "الاكسباير": ["Expiry", "بەسەرچوون"], "حذف": ["Delete", "سڕینەوە"], "اعتماد وحفظ الوصل": ["Approve and save slip", "پەسەندکردن و پاشەکەوتکردنی وەسڵ"], "إلغاء": ["Cancel", "هەڵوەشاندنەوە"], "كود المادة...": ["Material code...", "کۆدی مادە..."], "تاريخ الاكسباير": ["Expiry date", "بەرواری بەسەرچوون"], "الوجبة / الاكسباير": ["Batch / Expiry", "بەتش / بەسەرچوون"], "بدون اكسباير": ["No expiry", "بێ بەرواری بەسەرچوون"], "إذن إدخال مواد أولية": ["Materials In Slip", "وەسڵی داخڵکردنی مادە"], "إذن إخراج مواد أولية": ["Materials Out Slip", "وەسڵی دەرکردنی مادە"], "تعديل إذن إدخال مواد أولية": ["Edit Materials In Slip", "دەستکاریکردنی وەسڵی داخڵکردنی مادە"], "تعديل إذن إخراج مواد أولية": ["Edit Materials Out Slip", "دەستکاریکردنی وەسڵی دەرکردنی مادە"], "تعديل رصيد افتتاحي": ["Edit opening balance", "دەستکاریکردنی هاوسەنگی سەرەتایی"], "رصيد افتتاحي مرحّل": ["Carried-over opening balance", "هاوسەنگی سەرەتایی گوازراوە"], "رصيد افتتاحي مرحّل من العام السابق": ["Opening balance carried over from the previous year", "هاوسەنگی سەرەتایی گوازراوە لە ساڵی ڕابردوو"], "الحالة": ["Status", "دۆخ"], "الوحدة": ["Unit", "یەکە"], "الكمية الحالية الإجمالية": ["Total current quantity", "کۆی بڕی ئێستا"], "اسم المادة الأولية": ["Material name", "ناوی مادە"], "الحد الأدنى": ["Minimum", "کەمترین ڕادە"], "إجراء": ["Action", "کردار"], "تحت الحد الأدنى": ["Below minimum", "خوار کەمترین ڕادە"], "جيد": ["Good", "باش"], "لا توجد مواد أولية تطابق بحثك.": ["No materials match your search.", "هیچ مادەیەک نییە لەگەڵ گەڕانەکەت بگونجێت."], "(المتبقي: {0} / الحد: {1})": ["(Remaining: {0} / Limit: {1})", "(ماوە: {0} / کەمترین ڕادە: {1})"], "(وجبة: {0} | متبقي: {1} يوم)": ["(Batch: {0} | {1} days left)", "(بەتش: {0} | {1} ڕۆژ ماوە)"], "(وجبة: {0} | منتهية الصلاحية!)": ["(Batch: {0} | Expired!)", "(بەتش: {0} | بەسەرچووە!)"], "الوجبات:": ["Batches:", "بەتشەکان:"], "لا توجد وجبات نشطة": ["No active batches", "هیچ بەتشێکی چالاک نییە"], "(متاح: {0})": ["(Available: {0})", "(بەردەست: {0})"], "سجل الحركات فارغ لهذا التحديد.": ["The transaction log is empty for this selection.", "تۆماری جووڵەکان بۆ ئەم هەڵبژاردنە بەتاڵە."], "رقم الوصل": ["Slip No.", "ژمارەی وەسڵ"], "التاريخ": ["Date", "بەروار"], "النوع": ["Type", "جۆر"], "المواد والكميات": ["Materials & quantities", "مادە و بڕەکان"], "ملاحظات الوصل": ["Slip notes", "تێبینییەکانی وەسڵ"], "اكسباير:": ["Expiry:", "بەسەرچوون:"], "إدخال": ["In", "داخڵکردن"], "افتتاحي": ["Opening", "سەرەتایی"], "إخراج": ["Out", "دەرکردن"], "تعديل الحركة": ["Edit transaction", "دەستکاریکردنی جووڵە"], "طباعة الوصل": ["Print slip", "چاپکردنی وەسڵ"], "لا توجد مواد أولية مسجلة.": ["No materials registered.", "هیچ مادەیەک تۆمار نەکراوە."], "لا توجد مواد مسجلة.": ["No materials registered.", "هیچ مادەیەک تۆمار نەکراوە."], "حذف هذا الوصل بالكامل؟": ["Delete this slip entirely?", "ئەم وەسڵە بە تەواوی بسڕدرێتەوە؟"], "حذف المادة الأولية؟": ["Delete this material?", "مادەکە بسڕدرێتەوە؟"], "تم الحذف بنجاح": ["Deleted successfully", "بە سەرکەوتوویی سڕایەوە"], "تم الحذف": ["Deleted", "سڕایەوە"], "كود المادة مستخدم مسبقاً!": ["This material code is already in use!", "کۆدی مادە پێشتر بەکارهاتووە!"], "تم الحفظ بنجاح": ["Saved successfully", "بە سەرکەوتوویی پاشەکەوت کرا"], "اكتب اسم الوحدة الجديدة أولاً": ["Type the new unit name first", "سەرەتا ناوی یەکەی نوێ بنووسە"], "يجب أن يحتوي الوصل على مادة واحدة على الأقل": ["The slip must contain at least one material", "پێویستە وەسڵەکە لانیکەم یەک مادەی تێدا بێت"], "يرجى تحديد كود المادة أو اسمها لكل صف": ["Please specify the material code or name for every row", "تکایە کۆد یان ناوی مادە بۆ هەر ڕیزێک دیاری بکە"], "المادة غير مسجلة أو الكود خاطئ: \"{0}\"": ["Material not registered or wrong code: \"{0}\"", "مادەکە تۆمار نەکراوە یان کۆدەکە هەڵەیە: \"{0}\""], "الكمية المطلوبة للمادة ({0}) أكبر من المتاح في المخزن ({1})!": ["The requested quantity for ({0}) exceeds the available stock ({1})!", "بڕی داواکراو بۆ مادەی ({0}) زیاترە لەوەی لە کۆگادا هەیە ({1})!"], "تم تحديث الوصل بنجاح": ["Slip updated successfully", "وەسڵەکە بە سەرکەوتوویی نوێکرایەوە"], "تم تسجيل وإصدار الوصل بنجاح": ["Slip recorded and issued successfully", "وەسڵەکە بە سەرکەوتوویی تۆمار کرا و دەرچوو"], "تم حفظ إعدادات المخزن بنجاح": ["Warehouse settings saved successfully", "ڕێکخستنەکانی کۆگا بە سەرکەوتوویی پاشەکەوت کران"], "تم تحميل ملف النسخة الاحتياطية": ["Backup file downloaded", "فایلی کۆپی پاشەکەوت داگیرا"], "تم استعادة البيانات بنجاح": ["Data restored successfully", "داتاکان بە سەرکەوتوویی گەڕێندرانەوە"], "الملف غير متوافق!": ["Incompatible file!", "فایلەکە گونجاو نییە!"], "ملف غير صالح!": ["Invalid file!", "فایلێکی نادروستە!"], "تم إلغاء التصفير": ["Reset cancelled", "سفرکردنەوە هەڵوەشێندرایەوە"], "المخزن فارغ مسبقاً!": ["The warehouse is already empty!", "کۆگا پێشتر بەتاڵە!"], "المخزن فارغ، لا توجد بيانات لتصديرها!": ["The warehouse is empty, no data to export!", "کۆگا بەتاڵە، هیچ داتایەک نییە بۆ هەناردەکردن!"], "تم تصدير تقرير Excel بنجاح 📊": ["Excel report exported successfully 📊", "ڕاپۆرتی Excel بە سەرکەوتوویی هەناردە کرا 📊"], "حدث خطأ أثناء التصدير!": ["An error occurred during export!", "هەڵەیەک ڕوویدا لە کاتی هەناردەکردندا!"], "تصفير": ["RESET", "سفرکردنەوە"], "أنت تطلب تصفير الحركات وبدء سنة مالية جديدة.\nسيقوم النظام بنقل الجرد الحالي كأرصدة افتتاحية.\n\nلتأكيد التصفير، اكتب كلمة (تصفير):": ["You are requesting to reset all transactions and start a new financial year.\nThe system will carry the current inventory over as opening balances.\n\nTo confirm, type the word (RESET):", "داوای سفرکردنەوەی جووڵەکان و دەستپێکردنی ساڵێکی دارایی نوێ دەکەیت.\nسیستەمەکە جەردی ئێستا دەگوازێتەوە وەک هاوسەنگی سەرەتایی.\n\nبۆ دڵنیابوونەوە لە سفرکردنەوە، ووشەی (سفرکردنەوە) بنووسە:"], "تم تصفير المخازن ونقل الأرصدة الافتتاحية للسنة الجديدة بنجاح!": ["The warehouse was reset and opening balances were carried over to the new year successfully!", "کۆگاکان سفر کرانەوە و هاوسەنگییە سەرەتاییەکان بۆ ساڵی نوێ بە سەرکەوتوویی گوازرانەوە!"], "إذن مخزني - رقم": ["Warehouse slip - No.", "وەسڵی کۆگا - ژمارە"], "العنوان: ": ["Address: ", "ناونیشان: "], "هاتف: ": ["Phone: ", "تەلەفۆن: "], "رقم الوصل:": ["Slip No.:", "ژمارەی وەسڵ:"], "تاريخ الحركة:": ["Transaction date:", "بەرواری جووڵە:"], "م": ["#", "ژ"], "كود الصنف": ["Item code", "کۆدی جۆر"], "ملاحظات الوصل:": ["Slip notes:", "تێبینییەکانی وەسڵ:"], "لا توجد ملاحظات": ["No notes", "هیچ تێبینییەک نییە"], "أمين المخزن": ["Storekeeper", "کۆگادار"], "المستلم / المعتمد": ["Receiver / Approver", "وەرگر / پەسەندکەر"], "جرد المواد الأولية": ["Materials Inventory", "جەردی مادەکان"], "تقرير جرد المواد والكميات الحالية": ["Materials and current quantities inventory report", "ڕاپۆرتی جەردی مادە و بڕە ئێستاکان"], "تاريخ الجرد: {0}": ["Inventory date: {0}", "بەرواری جەرد: {0}"], "الوجبات (الاكسباير)": ["Batches (Expiry)", "بەتشەکان (بەسەرچوون)"], "تقرير_المخزن": ["Warehouse_Report", "ڕاپۆرتی_کۆگا"], "قطعة": ["Piece", "دانە"], "كرتون": ["Carton", "کارتۆن"], "برميل": ["Barrel", "بەرمیل"], "كغم": ["Kg", "کگم"], "لتر": ["Liter", "لیتر"], "متر": ["Meter", "مەتر"]};
   const I18N = {};
   Object.keys(I18N_RAW).forEach(k => { I18N[NORM(k)] = I18N_RAW[k]; });
   let lang = 'ar';
@@ -718,7 +667,7 @@
     const sRow = (st.data || [])[0]; try { cloudSettings = sRow ? JSON.parse(sRow.j) : null; } catch(e){}
     (sh.data || []).forEach(r => { try { shared[r.id] = JSON.parse(r.j); } catch(e){} });
     if (Array.isArray(shared.customUnits)) customUnits = shared.customUnits;
-    materials.forEach(x => { ensureUnit(x.unit); ensureUnit(x.unit2); });
+    materials.forEach(x => ensureUnit(x.unit));
     populateUnits(); loadSettings(); renderAll();
   }
   function loginUI(msg){
@@ -844,22 +793,6 @@
     return { balance: inSum - outSum, batches };
   }
 
-  // الرصيد بعد كل حركة: تراكمي لكل مادة بترتيب (التاريخ ثم وقت الإنشاء)
-  function computeRunning() {
-    const map = {}, bal = {};
-    const sorted = transactions.slice().sort((a,b) => (a.date||'').localeCompare(b.date||'') || (a.createdAt||0)-(b.createdAt||0) || (Number(a.id)||0)-(Number(b.id)||0));
-    sorted.forEach(t => {
-      const lines = t.items ? t.items.map(i => ({ mat: findMaterial(i.materialQuery), qty: Number(i.qty) }))
-                            : [{ mat: findMaterial(t.materialName), qty: Number(t.qty) }];
-      map[t.id] = lines.map(l => {
-        if(!l.mat) return null;
-        bal[l.mat.id] = r6((bal[l.mat.id] || 0) + (t.type === 'out' ? -1 : 1) * l.qty);
-        return bal[l.mat.id];
-      });
-    });
-    return map;
-  }
-
   function updateMonthFilters() {
     const monthSelect = $('#logFilterMonth');
     if(!monthSelect) return;
@@ -951,7 +884,7 @@
         <td class="en" style="font-weight:bold; color:var(--steel);">${escapeHtml(m.code)}</td>
         <td>${escapeHtml(m.name)}</td>
         <td>${escapeHtml(tl(m.category||'—'))}</td>
-        <td style="font-weight:700">${fmtNum(b.balance)}${hasU2(m) ? `<span class="wh-batch-details" style="color:var(--amber-dark);font-weight:700">= ${fmtNum(fromBase(m, b.balance))} ${escapeHtml(tl(m.unit2))}</span>` : ''} ${batchStr}</td>
+        <td style="font-weight:700">${fmtNum(b.balance)} ${batchStr}</td>
         <td>${escapeHtml(tl(m.unit||'قطعة'))}</td>
         <td>${isLow ? `<span class="badge badge-low">${tl('تحت الحد الأدنى')}</span>` : `<span class="badge badge-ok">${tl('جيد')}</span>`}</td>
       </tr>`;
@@ -1011,25 +944,19 @@
       return;
     }
 
-    const running = computeRunning();
-    const balBadge = (mat, b) => (mat && b !== null && b !== undefined)
-      ? ` <span style="display:inline-block;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:1px 8px;font-size:12px;font-weight:700;color:var(--steel-dark);margin-inline-start:6px;">${tl('الرصيد:')} ${fmtNum(b)} ${escapeHtml(tl(mat.unit||'قطعة'))}${u2Text(mat, b)}</span>` : '';
-
     wrap.innerHTML = `<table class="wh-table">
       <thead><tr><th>${tl('رقم الوصل')}</th><th>${tl('التاريخ')}</th><th>${tl('النوع')}</th><th>${tl('المواد والكميات')}</th><th>${tl('ملاحظات الوصل')}</th><th>${tl('إجراء')}</th></tr></thead>
       <tbody>
         ${filtered.map(t => {
           let itemsDesc = '';
           if(t.items) {
-            itemsDesc = t.items.map((i, idx) => {
+            itemsDesc = t.items.map(i => {
               const mat = findMaterial(i.materialQuery);
               const nameStr = mat ? `(${mat.code})${mat.name}` : i.materialQuery;
-              const unitStr = mat ? ' ' + escapeHtml(tl(mat.unit||'قطعة')) : '';
-              return `<div style="margin-bottom:4px;">• <strong>${escapeHtml(nameStr)}</strong>: ${fmtNum(i.qty)}${unitStr}${u2Text(mat, i.qty)}${i.expiryDate ? ' ('+tl('اكسباير:')+' '+tl(i.expiryDate)+')' : ''}${balBadge(mat, (running[t.id]||[])[idx])}</div>`;
+              return `<div>• <strong>${escapeHtml(nameStr)}</strong>: ${fmtNum(i.qty)}${i.expiryDate ? '('+tl('اكسباير:')+' '+tl(i.expiryDate)+')' : ''}</div>`;
             }).join('');
           } else {
-            const lm = findMaterial(t.materialName);
-            itemsDesc = `<div style="margin-bottom:4px;">• <strong>${escapeHtml(t.materialName)}</strong>: ${fmtNum(t.qty)}${lm ? ' ' + escapeHtml(tl(lm.unit||'قطعة')) + u2Text(lm, t.qty) : ''}${t.expiryDate ? ' ('+tl('اكسباير:')+' '+tl(t.expiryDate)+')' : ''}${balBadge(lm, (running[t.id]||[])[0])}</div>`;
+            itemsDesc = `<div>• <strong>${escapeHtml(t.materialName)}</strong>: ${fmtNum(t.qty)}${t.expiryDate ? '('+tl('اكسباير:')+' '+tl(t.expiryDate)+')' : ''}</div>`;
           }
 
           return `<tr>
@@ -1077,7 +1004,7 @@
               <td style="text-align:center;">${idx+1}</td>
               <td style="text-align:center; font-family: monospace;">${code}</td>
               <td>${name}</td>
-              <td style="text-align:center; font-weight: bold;">${fmtNum(i.qty)} ${unit}${hasU2(mat) ? `<br><span style="font-weight:normal;font-size:12px;">(= ${fmtNum(fromBase(mat, i.qty))} ${escapeHtml(tl(mat.unit2))})</span>` : ''}</td>
+              <td style="text-align:center; font-weight: bold;">${fmtNum(i.qty)} ${unit}</td>
               <td style="text-align:center;">${tl(i.expiryDate || '—')}</td>
             </tr>`;
           }).join('');
@@ -1202,10 +1129,6 @@
         $('#matCategory').value = m.category||'مادة أولية';
         ensureUnit(m.unit||'قطعة');
         populateUnits(m.unit||'قطعة');
-        $('#matHasUnit2').checked = hasU2(m);
-        if(hasU2(m)) { ensureUnit(m.unit2); populateUnit2(m.unit2); $('#matFactor').value = m.factor; }
-        else { populateUnit2(); $('#matFactor').value = ''; }
-        updateUnit2Box();
         $('#matMinStock').value = m.minStock??'';
         $('#matNotes').value = m.notes||'';
         $('#matSubmitBtn').textContent = tl('تحديث المادة');
@@ -1239,23 +1162,11 @@
         ensureUnit(unitVal);
       }
 
-      let unit2Val = '', factorVal = '';
-      if($('#matHasUnit2').checked) {
-        unit2Val = $('#matUnit2').value;
-        if(unit2Val === NEW_UNIT_VALUE) unit2Val = $('#matNewUnit2').value.trim();
-        factorVal = Number($('#matFactor').value);
-        if(!unit2Val || !(factorVal > 0)) { showToast(tl('اكتب الوحدة الثانية والمعامل (أكبر من صفر)'), true); return; }
-        if(unit2Val === unitVal) { showToast(tl('الوحدة الثانية يجب أن تختلف عن الأساسية'), true); return; }
-        ensureUnit(unit2Val);
-      }
-
       const data = {
         code,
         name,
         category: $('#matCategory').value,
         unit: unitVal,
-        unit2: unit2Val,
-        factor: factorVal,
         minStock: $('#matMinStock').value !== '' ? Number($('#matMinStock').value) : '',
         notes: $('#matNotes').value.trim()
       };
@@ -1326,30 +1237,14 @@
     }
   }
 
-  // يظهر اختيار الوحدة (الأساسية/الثانية) فقط للمواد التي لها وحدة ثانية
-  function refreshUnitField(tr, mat, presetUnit) {
-    const sel = tr.querySelector('.slip-unit-sel'), lbl = tr.querySelector('.slip-unit-lbl');
-    if(!sel || !lbl) return;
-    if(!mat) { sel.style.display = 'none'; lbl.textContent = ''; return; }
-    if(hasU2(mat)) {
-      const keep = presetUnit || sel.value;
-      sel.innerHTML = `<option value="${escapeHtml(mat.unit)}">${escapeHtml(tl(mat.unit))}</option><option value="${escapeHtml(mat.unit2)}">${escapeHtml(tl(mat.unit2))}</option>`;
-      sel.value = (keep === mat.unit2) ? mat.unit2 : mat.unit;
-      sel.style.display = ''; lbl.textContent = '';
-    } else {
-      sel.style.display = 'none'; sel.innerHTML = '';
-      lbl.textContent = tl(mat.unit || 'قطعة');
-    }
-  }
-
-  function addSlipRow(matCode = '', matName = '', qty = '', expiry = '', entryUnit = '') {
+  function addSlipRow(matCode = '', matName = '', qty = '', expiry = '') {
     const tbody = $('#slipItemsBody');
     if(!tbody) return;
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><input class="wh-input slip-code-input en" list="globalCodesList" placeholder="${tl('كود المادة...')}" value="${escapeHtml(matCode)}"></td>
       <td><input class="wh-input slip-name-input" list="globalNamesList" placeholder="${tl('اسم المادة...')}" value="${escapeHtml(matName)}"></td>
-      <td><div style="display:flex;gap:4px;align-items:center;"><input class="wh-input slip-qty-input" type="number" min="0.0001" step="any" required placeholder="${tl('الكمية')}" value="${qty}" style="min-width:70px;"><select class="wh-select slip-unit-sel" style="display:none;width:auto;min-width:70px;"></select><span class="slip-unit-lbl" style="font-size:12px;color:var(--ink-soft);white-space:nowrap;"></span></div></td>
+      <td><input class="wh-input slip-qty-input" type="number" min="0.01" step="any" required placeholder="${tl('الكمية')}" value="${qty}"></td>
       <td class="slip-exp-td"><input class="wh-input slip-exp-input" type="date" value="${expiry}"></td>
       <td style="text-align:center;"><button type="button" class="wh-icon-btn remove-row-btn" style="color:var(--dmg)">🗑</button></td>
     `;
@@ -1362,7 +1257,6 @@
       const mat = materials.find(m => m.code && m.code.toLowerCase() === codeInput.value.trim().toLowerCase());
       if(mat) {
         nameInput.value = mat.name;
-        refreshUnitField(tr, mat);
         refreshExpiryField(tr, mat);
       }
     }
@@ -1370,7 +1264,6 @@
       const mat = materials.find(m => m.name && m.name.toLowerCase() === nameInput.value.trim().toLowerCase());
       if(mat) {
         codeInput.value = mat.code;
-        refreshUnitField(tr, mat);
         refreshExpiryField(tr, mat);
       }
     }
@@ -1391,7 +1284,7 @@
     // عند تعبئة الصف مسبقاً (مثلاً أثناء تعديل حركة سابقة) نجهز حقل الاكسباير المناسب فوراً
     if(matCode || matName) {
       const mat = findMaterial(matCode) || findMaterial(matName);
-      if(mat) { refreshUnitField(tr, mat, entryUnit); refreshExpiryField(tr, mat, expiry); }
+      if(mat) refreshExpiryField(tr, mat, expiry);
     }
   }
 
@@ -1441,8 +1334,7 @@
         const code = mat ? mat.code : item.materialQuery;
         const name = mat ? mat.name : '';
         const exp = (item.expiryDate && item.expiryDate !== 'بدون اكسباير') ? item.expiryDate : '';
-        const eu = (mat && hasU2(mat) && item.entryUnit === mat.unit2) ? mat.unit2 : '';
-        addSlipRow(code, name, eu ? fromBase(mat, item.qty) : item.qty, exp, eu);
+        addSlipRow(code, name, item.qty, exp);
       });
     } else {
       addSlipRow();
@@ -1478,7 +1370,7 @@
       for(let tr of rows) {
         const codeVal = tr.querySelector('.slip-code-input').value.trim();
         const nameVal = tr.querySelector('.slip-name-input').value.trim();
-        const enteredQty = Number(tr.querySelector('.slip-qty-input').value);
+        const qty = Number(tr.querySelector('.slip-qty-input').value);
         const expiryDate = tr.querySelector('.slip-exp-input').value.trim();
 
         if(!codeVal && !nameVal) {
@@ -1492,21 +1384,15 @@
           return;
         }
 
-        const unitSel = tr.querySelector('.slip-unit-sel');
-        const entryUnit = (hasU2(mat) && unitSel && unitSel.value) ? unitSel.value : '';
-        const qty = toBase(mat, enteredQty, entryUnit);
-
         if(type === 'out') {
           const b = computeBalance(mat.name, editId || undefined);
-          if(qty > b.balance + 1e-9) {
+          if(qty > b.balance) {
             showToast(tl('الكمية المطلوبة للمادة ({0}) أكبر من المتاح في المخزن ({1})!', mat.name, b.balance), true);
             return;
           }
         }
 
-        const itm = { materialQuery: mat.code, qty, expiryDate: expiryDate || 'بدون اكسباير' };
-        if(entryUnit === mat.unit2) itm.entryUnit = entryUnit;
-        items.push(itm);
+        items.push({ materialQuery: mat.code, qty, expiryDate: expiryDate || 'بدون اكسباير' });
       }
 
       if(editId) {
@@ -1753,18 +1639,12 @@
   renderAll();
   startCloud();
 
-  const _cb2 = $('#matHasUnit2'), _u2 = $('#matUnit2'), _nu2 = $('#matNewUnit2'), _nu1 = $('#matNewUnit');
-  if(_cb2) _cb2.onchange = updateUnit2Box;
-  if(_u2) _u2.onchange = () => { _nu2.style.display = _u2.value === NEW_UNIT_VALUE ? 'block' : 'none'; updateUnit2Box(); };
-  if(_nu2) _nu2.oninput = updateUnit2Box;
-  if(_nu1) _nu1.oninput = updateUnit2Box;
   const matUnitSel = $('#matUnit');
   if(matUnitSel) matUnitSel.onchange = () => {
     const ni = $('#matNewUnit');
     const isNew = matUnitSel.value === NEW_UNIT_VALUE;
     ni.style.display = isNew ? 'block' : 'none';
     if(isNew) ni.focus();
-    updateUnit2Box();
   };
   const matsCatFilter = $('#matsCategoryFilter');
   if(matsCatFilter) matsCatFilter.onchange = renderMats;
