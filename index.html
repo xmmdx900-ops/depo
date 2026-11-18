@@ -348,6 +348,12 @@
           <option value="qty:desc">ترتيب: الكمية الأكبر أولاً</option>
           <option value="qty:asc">ترتيب: الكمية الأقل أولاً</option>
         </select>
+        <select class="wh-select" id="reportUnitMode" title="الوحدة المعروضة في التقرير">
+          <option value="each">وحدة التقرير: حسب اختيار كل مادة</option>
+          <option value="base">وحدة التقرير: الكل أساسية</option>
+          <option value="second">وحدة التقرير: الكل ثانوية</option>
+          <option value="both">وحدة التقرير: الكل معاً</option>
+        </select>
         <button class="wh-btn-ghost" id="btnExportExcel" type="button" style="white-space:nowrap;">⬇ تصدير التقرير Excel</button>
       </div>
       <div id="dashTableWrap"></div>
@@ -668,7 +674,22 @@
    ['ترتيب: الكمية الأقل أولاً','Sort: Lowest quantity first','ڕیزبەندی: کەمترین بڕ یەکەم'],
    ['ترتيب: الحد الأدنى الأقل أولاً','Sort: Lowest minimum first','ڕیزبەندی: کەمترین ڕادە یەکەم'],
    ['ترتيب: الحد الأدنى الأكبر أولاً','Sort: Highest minimum first','ڕیزبەندی: زۆرترین ڕادە یەکەم'],
-   ['ترتيب المواد','Sort materials','ڕیزبەندی مادەکان']
+   ['ترتيب المواد','Sort materials','ڕیزبەندی مادەکان'],
+   ['وحدة التقرير: الأساسية','Report unit: Primary','یەکەی ڕاپۆرت: سەرەکی'],
+   ['وحدة التقرير: الثانوية','Report unit: Secondary','یەکەی ڕاپۆرت: لاوەکی'],
+   ['وحدة التقرير: الاثنتان معاً','Report unit: Both','یەکەی ڕاپۆرت: هەردووکیان'],
+   ['الوحدة المعروضة في التقرير','Unit shown in the report','یەکەی پیشاندراو لە ڕاپۆرت'],
+   ['الكمية (الوحدة الأساسية)','Quantity (primary unit)','بڕ (یەکەی سەرەکی)'],
+   ['الوحدة الأساسية','Primary unit','یەکەی سەرەکی'],
+   ['الكمية (الوحدة الثانوية)','Quantity (secondary unit)','بڕ (یەکەی لاوەکی)'],
+   ['الوحدة الثانوية','Secondary unit','یەکەی لاوەکی'],
+   ['وحدة التقرير: حسب اختيار كل مادة','Report unit: per material','یەکەی ڕاپۆرت: بەپێی هەر مادەیەک'],
+   ['وحدة التقرير: الكل أساسية','Report unit: all primary','یەکەی ڕاپۆرت: هەمووی سەرەکی'],
+   ['وحدة التقرير: الكل ثانوية','Report unit: all secondary','یەکەی ڕاپۆرت: هەمووی لاوەکی'],
+   ['وحدة التقرير: الكل معاً','Report unit: all both','یەکەی ڕاپۆرت: هەمووی پێکەوە'],
+   ['وحدة التقرير','Report unit','یەکەی ڕاپۆرت'],
+   ['الاثنتان معاً','Both','هەردووکیان'],
+   ['تم حفظ وحدة التقرير لهذه المادة','Report unit saved for this material','یەکەی ڕاپۆرت بۆ ئەم مادەیە پاشەکەوت کرا']
   ].forEach(r => { I18N[NORM(r[0])] = [r[1], r[2]]; });
 
   let lang = 'ar';
@@ -1175,6 +1196,11 @@
         <td style="font-weight:700">${fmtNum(b.balance)}${matUnit2(m) ? ` <span style="font-weight:600;color:var(--amber-dark);font-size:12.5px;">(= ${unit2Equiv(m, b.balance)})</span>` : ''} ${batchStr}</td>
         <td>${escapeHtml(tl(m.unit||'قطعة'))}</td>
         <td>${isLow ? `<span class="badge badge-low">${tl('تحت الحد الأدنى')}</span>` : `<span class="badge badge-ok">${tl('جيد')}</span>`}</td>
+        <td>${matUnit2(m) ? `<select class="wh-select" data-rpu="${escapeHtml(String(m.id))}" style="min-width:120px;padding:4px 8px;">
+          <option value="base"${(m.reportUnit||'base')==='base' ? ' selected' : ''}>${escapeHtml(tl(m.unit||'قطعة'))}</option>
+          <option value="second"${m.reportUnit==='second' ? ' selected' : ''}>${escapeHtml(tl(matUnit2(m).name))}</option>
+          <option value="both"${m.reportUnit==='both' ? ' selected' : ''}>${escapeHtml(tl('الاثنتان معاً'))}</option>
+        </select>` : '<span style="color:var(--ink-soft)">—</span>'}</td>
       </tr>`;
     }).join('');
 
@@ -1195,9 +1221,18 @@
     }
 
     wrap.innerHTML = `<table class="wh-table">
-      <thead><tr>${sortTh(tl('كود المادة'), 'code', dashSort)}${sortTh(tl('اسم المادة'), 'name', dashSort)}<th>${tl('الفئة')}</th>${sortTh(tl('الكمية الحالية الإجمالية'), 'qty', dashSort)}<th>${tl('الوحدة')}</th><th>${tl('الحالة')}</th></tr></thead>
+      <thead><tr>${sortTh(tl('كود المادة'), 'code', dashSort)}${sortTh(tl('اسم المادة'), 'name', dashSort)}<th>${tl('الفئة')}</th>${sortTh(tl('الكمية الحالية الإجمالية'), 'qty', dashSort)}<th>${tl('الوحدة')}</th><th>${tl('الحالة')}</th><th>${tl('وحدة التقرير')}</th></tr></thead>
       <tbody>${tbodyHtml}</tbody>
     </table>`;
+    wrap.querySelectorAll('select[data-rpu]').forEach(sel => {
+      sel.onchange = () => {
+        const mm = materials.find(x => String(x.id) === sel.dataset.rpu);
+        if(!mm) return;
+        mm.reportUnit = sel.value;
+        saveData('materials', materials);
+        showToast(tl('تم حفظ وحدة التقرير لهذه المادة'));
+      };
+    });
     wrap.querySelectorAll('th[data-sort]').forEach(th => {
       th.onclick = () => { dashSort = nextSort(dashSort, th.dataset.sort); renderDash(); };
     });
@@ -1907,25 +1942,30 @@
       const thinBorder = { style: 'thin', color: { argb: 'FF999999' } };
       const fullBorder = { top: thinBorder, left: thinBorder, bottom: thinBorder, right: thinBorder };
 
-      worksheet.mergeCells('A1:H1');
+      const colLetter = n => String.fromCharCode(64 + n);   // حتى 26 عموداً
+      const heads = ['كود المادة', 'اسم المادة', 'الفئة', 'الكمية الحالية الإجمالية', 'الحد الأدنى', 'الحالة', 'الوجبات (الاكسباير)'];
+      const lastCol = colLetter(heads.length);
+      const statusIdx = 6;   // رقم عمود "الحالة"
+
+      worksheet.mergeCells('A1:' + lastCol + '1');
       worksheet.getCell('A1').value = tl(settings.warehouseName);
       worksheet.getCell('A1').font = { name: 'Tajawal', size: 24, bold: true, color: { argb: 'FFFFFF' } };
       worksheet.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '223037' } };
       worksheet.getCell('A1').alignment = { vertical: 'middle', horizontal: 'center' };
       worksheet.getRow(1).height = 36;
 
-      worksheet.mergeCells('A2:H2');
+      worksheet.mergeCells('A2:' + lastCol + '2');
       worksheet.getCell('A2').value = tl('تقرير جرد المواد والكميات الحالية');
       worksheet.getCell('A2').font = { name: 'Tajawal', size: 13, bold: true, color: { argb: 'B9761C' } };
       worksheet.getCell('A2').alignment = { vertical: 'middle', horizontal: 'center' };
 
-      worksheet.mergeCells('A3:H3');
+      worksheet.mergeCells('A3:' + lastCol + '3');
       worksheet.getCell('A3').value = tl('تاريخ الجرد: {0}', todayStr());
       worksheet.getCell('A3').font = { name: 'Tajawal', size: 12, bold: true, color: { argb: '5B564C' } };
       worksheet.getCell('A3').alignment = { vertical: 'middle', horizontal: 'center' };
 
       worksheet.addRow([]);
-      worksheet.addRow(['كود المادة', 'اسم المادة', 'الفئة', 'الكمية الحالية الإجمالية', 'وحدة القياس', 'الحد الأدنى', 'الحالة', 'الوجبات (الاكسباير)'].map(h => tl(h)));
+      worksheet.addRow(heads.map(h => tl(h)));
 
       const headerRow = worksheet.getRow(5);
       headerRow.eachCell((cell) => {
@@ -1941,8 +1981,20 @@
       exportList.forEach(m => {
         const b = computeBalance(m.name);
         const isLow = m.minStock !== '' && m.minStock !== null && b.balance <= Number(m.minStock);
-        const batchText = Object.keys(b.batches).map(k => `${tl(k)}: ${b.batches[k]}`).join(' | ') || '—';
-        const row = worksheet.addRow([m.code, m.name, tl(m.category || '—'), b.balance, tl(m.unit || 'قطعة'), (m.minStock === '' || m.minStock == null) ? '—' : Number(m.minStock), tl(isLow ? 'تحت الحد الأدنى' : 'جيد'), batchText]);
+        const u2 = matUnit2(m);
+        const baseUnit = tl(m.unit || 'قطعة');
+        // وحدة التقرير لهذه المادة: حسب اختيارها، أو الاختيار العام إن كان يفرض خياراً على الكل
+        let mode = reportUnitMode === 'each' ? (m.reportUnit || 'base') : reportUnitMode;
+        if (!u2) mode = 'base';   // مادة بلا وحدة ثانوية تبقى بالأساسية
+        // الرقم مع وحدته في نفس الخلية
+        const fq = (v) => {
+          if (mode === 'second') return `${fmtNum(round4(v * u2.f))} ${tl(u2.name)}`;
+          if (mode === 'both') return `${fmtNum(round4(v))} ${baseUnit} (= ${fmtNum(round4(v * u2.f))} ${tl(u2.name)})`;
+          return `${fmtNum(round4(v))} ${baseUnit}`;
+        };
+        const minTxt = (m.minStock === '' || m.minStock == null) ? '—' : fq(Number(m.minStock));
+        const batchText = Object.keys(b.batches).map(k => `${tl(k)}: ${fq(b.batches[k])}`).join(' | ') || '—';
+        const row = worksheet.addRow([m.code, m.name, tl(m.category || '—'), fq(b.balance), minTxt, tl(isLow ? 'تحت الحد الأدنى' : 'جيد'), batchText]);
         row.height = 24;
         row.eachCell((cell) => {
           cell.font = { name: 'Tajawal', size: 18 };
@@ -1950,7 +2002,7 @@
           cell.border = fullBorder;
         });
 
-        const statusCell = row.getCell(7);
+        const statusCell = row.getCell(statusIdx);
         if(isLow) {
           statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F6E1DE' } };
           statusCell.font = { name: 'Tajawal', size: 18, bold: true, color: { argb: 'B0453B' } };
@@ -2010,6 +2062,12 @@
   }
   const matsCatFilter = $('#matsCategoryFilter');
   if(matsCatFilter) matsCatFilter.onchange = renderMats;
+  // وحدة التقرير: base | second | both (تُحفظ في المتصفح)
+  let reportUnitMode = 'each';
+  try { const v = localStorage.getItem(STORAGE_PREFIX + 'reportUnitMode2'); if(['each','base','second','both'].includes(v)) reportUnitMode = v; } catch(e){}
+  { const ru = $('#reportUnitMode');
+    if(ru) { ru.value = reportUnitMode;
+      ru.onchange = () => { reportUnitMode = ru.value; try { localStorage.setItem(STORAGE_PREFIX + 'reportUnitMode2', reportUnitMode); } catch(e){} }; } }
   const dashSortSel = $('#dashSort');
   if(dashSortSel) dashSortSel.onchange = () => { dashSort = dashSortSel.value; renderDash(); };
   const matsSortSel = $('#matsSort');
@@ -2124,6 +2182,6 @@
 })();
 </script>
 
-<div dir="rtl" style="text-align:center;font-size:11px;color:#999;padding:8px;">الإصدار: <span dir="ltr" style="unicode-bidi:isolate;">v2026-11-16-sort</span></div>
+<div dir="rtl" style="text-align:center;font-size:11px;color:#999;padding:8px;">الإصدار: <span dir="ltr" style="unicode-bidi:isolate;">v2026-11-18-units2</span></div>
 </body>
 </html>
